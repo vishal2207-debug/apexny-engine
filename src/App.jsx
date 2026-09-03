@@ -5,8 +5,8 @@ const ASSETS = [
   { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto' },
   { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto' },
   { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto' },
-  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodity' },
-  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodity' },
+  { symbol: 'XAUUSD', tvSymbol: 'TVC:GOLD', name: 'Gold Spot', category: 'Commodity' },
+  { symbol: 'XAGUSD', tvSymbol: 'TVC:SILVER', name: 'Silver Spot', category: 'Commodity' },
 ];
 
 const SIGNALS_MAP = {
@@ -18,8 +18,7 @@ const SIGNALS_MAP = {
     tp: '82,140.00',
     rr: '1:3.0',
     logic: 'Asian lows swept, 5M Bullish Fair Value Gap respected during NY Open.',
-    time: '3m ago',
-    active: true
+    time: '3m ago'
   },
   ETHUSD: {
     bias: 'SHORT',
@@ -29,8 +28,7 @@ const SIGNALS_MAP = {
     tp: '2,407.00',
     rr: '1:3.0',
     logic: 'Buy-side liquidity tapped at $2,515 followed by strong 5m Market Structure Shift.',
-    time: '9m ago',
-    active: true
+    time: '9m ago'
   },
   SOLUSD: {
     bias: 'LONG',
@@ -40,8 +38,7 @@ const SIGNALS_MAP = {
     tp: '109.50',
     rr: '1:3.0',
     logic: 'Bullish Order block mitigation with high volume displacement.',
-    time: '18m ago',
-    active: false
+    time: '18m ago'
   },
   XRPUSD: {
     bias: 'NEUTRAL',
@@ -51,8 +48,7 @@ const SIGNALS_MAP = {
     tp: '1.5200',
     rr: '1:3.0',
     logic: 'Consolidating below equal highs. Awaiting discount expansion.',
-    time: '25m ago',
-    active: false
+    time: '25m ago'
   },
   XAUUSD: {
     bias: 'LONG',
@@ -62,8 +58,7 @@ const SIGNALS_MAP = {
     tp: '2,776.00',
     rr: '1:3.0',
     logic: 'London Session high broken. Mitigation of 15m Imbalance at NY open.',
-    time: 'Just now',
-    active: true
+    time: 'Live'
   },
   XAGUSD: {
     bias: 'LONG',
@@ -73,8 +68,7 @@ const SIGNALS_MAP = {
     tp: '33.45',
     rr: '1:3.0',
     logic: 'SMT Divergence with Gold on 5M timeframe. Bullish break confirmed.',
-    time: '14m ago',
-    active: true
+    time: 'Live'
   }
 };
 
@@ -83,6 +77,7 @@ export default function App() {
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
   const [inKillzone, setInKillzone] = useState(false);
 
+  // Fetch live crypto prices from Delta Exchange
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -96,10 +91,7 @@ export default function App() {
                 change: parseFloat(t.change_24h || 0).toFixed(2),
               };
             });
-            // Approximate spot metals for Indian/Crypto broker feeds
-            priceMap['XAUUSD'] = { price: '2748.20', change: '1.15' };
-            priceMap['XAGUSD'] = { price: '32.45', change: '0.85' };
-            setPrices(priceMap);
+            setPrices(prev => ({ ...prev, ...priceMap }));
           }
         })
         .catch(() => {});
@@ -110,6 +102,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Check NY Session
   useEffect(() => {
     const checkNY = () => {
       const now = new Date();
@@ -185,7 +178,7 @@ export default function App() {
                         <span className="text-[10px] text-gray-400 font-normal">({asset.name})</span>
                       </div>
                       <div className="text-[11px] font-mono text-gray-300 mt-0.5">
-                        ${p?.price || '...'}
+                        {p?.price ? `$${p.price}` : <span className="text-emerald-400/80 font-sans text-[10px]">Live on Chart</span>}
                       </div>
                     </div>
 
@@ -221,9 +214,9 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Right Side: Interactive TradingView Chart with Live Trade HUD */}
+        {/* Right Side: Interactive Chart with On-Chart Entry / SL / TP Overlay Lines */}
         <main className="lg:col-span-3 flex flex-col space-y-3">
-          {/* Live Trade HUD Overlay Bar */}
+          {/* Live Trade HUD Overview */}
           <div className="bg-[#0e131f] p-3 rounded-lg border border-gray-800/80 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center space-x-2">
               <span className={`px-2 py-0.5 rounded text-xs font-black font-mono tracking-wide ${
@@ -235,7 +228,6 @@ export default function App() {
               <span className="text-xs text-gray-400">({selectedAsset.name})</span>
             </div>
 
-            {/* Target, Entry, Stop Loss Values */}
             <div className="flex items-center space-x-3 text-xs font-mono">
               <div className="bg-[#141b2d] px-2.5 py-1 rounded border border-gray-700">
                 <span className="text-gray-400">ENTRY: </span>
@@ -255,8 +247,35 @@ export default function App() {
             </div>
           </div>
 
-          {/* TradingView Chart Frame */}
-          <div className="w-full flex-grow h-[580px] rounded-lg overflow-hidden border border-gray-800 bg-[#07090e]">
+          {/* Chart Wrapper with Projected Visual Entry, SL, TP Lines */}
+          <div className="relative w-full flex-grow h-[580px] rounded-lg overflow-hidden border border-gray-800 bg-[#07090e]">
+            {/* Direct Visual Price Target Lines Overlay on Right edge */}
+            <div className="absolute right-14 top-10 bottom-14 w-44 z-10 pointer-events-none flex flex-col justify-between items-end">
+              {/* TP Line */}
+              <div className="w-full flex items-center justify-end space-x-1">
+                <div className="flex-1 border-b-2 border-dashed border-emerald-400/80"></div>
+                <span className="bg-emerald-500 text-black text-[10px] font-bold font-mono px-2 py-0.5 rounded shadow-lg shadow-emerald-500/20">
+                  TP: ${currentSignal.tp}
+                </span>
+              </div>
+
+              {/* Entry Line */}
+              <div className="w-full flex items-center justify-end space-x-1">
+                <div className="flex-1 border-b-2 border-solid border-cyan-400"></div>
+                <span className="bg-cyan-500 text-black text-[10px] font-bold font-mono px-2 py-0.5 rounded shadow-lg shadow-cyan-500/20">
+                  ENTRY: ${currentSignal.entry}
+                </span>
+              </div>
+
+              {/* SL Line */}
+              <div className="w-full flex items-center justify-end space-x-1">
+                <div className="flex-1 border-b-2 border-dashed border-rose-500/80"></div>
+                <span className="bg-rose-500 text-white text-[10px] font-bold font-mono px-2 py-0.5 rounded shadow-lg shadow-rose-500/20">
+                  SL: ${currentSignal.sl}
+                </span>
+              </div>
+            </div>
+
             <iframe
               key={selectedAsset.tvSymbol}
               title="TradingView Chart"
