@@ -234,7 +234,7 @@ export default function App() {
             <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
               APEX<span className="text-emerald-400">PRO</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                TERMINAL v6.3
+                TERMINAL v6.4
               </span>
             </h1>
             <p className="text-[11px] text-emerald-400 font-mono">
@@ -371,7 +371,7 @@ export default function App() {
                       <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
                     </div>
                     <div className="bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/40">
-                      <span className="text-emerald-400 text-[10px]">TP: </span>
+                      <span className="text-slate-400 text-[10px]">TP: </span>
                       <span className="text-emerald-300 font-bold">${formatPrice(activeStructure.tp)}</span>
                     </div>
                   </div>
@@ -561,7 +561,7 @@ export default function App() {
                 <span className="text-cyan-300 font-bold">${formatPrice(activeStructure.entry)}</span>
               </div>
               <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40">
-                <span className="text-rose-400 text-[10px]">SL: </span>
+                <span className="text-slate-400 text-[10px]">SL: </span>
                 <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
               </div>
               <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
