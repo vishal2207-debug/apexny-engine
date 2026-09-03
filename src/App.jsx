@@ -11,11 +11,10 @@ const ASSETS = [
 
 export default function App() {
   const [prices, setPrices] = useState({});
-  const [selectedAsset, setSelectedAsset] = useState(ASSETS[4]); // Defaults directly to Gold
+  const [selectedAsset, setSelectedAsset] = useState(ASSETS[4]);
   const [timeUTC, setTimeUTC] = useState('');
   const [accountSize, setAccountSize] = useState(10000);
 
-  // Live prices from Delta Exchange + Real Spot Metals
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -29,7 +28,6 @@ export default function App() {
                 change: parseFloat(t.change_24h || 0).toFixed(2),
               };
             });
-            // Matching the live active TradingView chart rates perfectly
             priceMap['XAUUSD'] = { price: 4493.05, change: '0.69' };
             priceMap['XAGUSD'] = { price: 42.50, change: '1.20' };
             setPrices(prev => ({ ...prev, ...priceMap }));
@@ -43,7 +41,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Live Clock
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
@@ -57,7 +54,6 @@ export default function App() {
   const activePrice = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
   const isCryptoSmall = activePrice < 10;
 
-  // Real-Time ICT Dynamic Levels around Current Candle
   const entryVal = activePrice;
   const slVal = activePrice * 0.995;
   const tpVal = activePrice * 1.015;
@@ -186,9 +182,9 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Right Column: Matched Chart Cockpit */}
+        {/* Right Column: Clean Chart Cockpit */}
         <main className="lg:col-span-3 flex flex-col space-y-3">
-          {/* Exact Live Numbers matching Chart ($4,493.05 for Gold) */}
+          {/* Top Live Numbers Bar */}
           <div className="bg-[#090d16] p-3 rounded-xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 shadow-lg">
             <div className="flex items-center space-x-2.5">
               <div className="px-2.5 py-1 rounded bg-emerald-500 text-black font-black text-xs font-mono tracking-wider shadow">
@@ -219,32 +215,8 @@ export default function App() {
             </div>
           </div>
 
-          {/* Interactive TradingView Engine with Synced Visual Levels */}
-          <div className="relative w-full flex-grow h-[600px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
-            {/* Direct Projected Target Lines on Chart Canvas */}
-            <div className="absolute right-14 top-16 bottom-16 w-56 z-10 pointer-events-none flex flex-col justify-between items-end">
-              <div className="w-full flex items-center justify-end space-x-1.5">
-                <div className="flex-1 border-b-2 border-dashed border-emerald-400"></div>
-                <span className="bg-emerald-500 text-black text-[10px] font-black font-mono px-2 py-0.5 rounded shadow-lg shadow-emerald-500/30">
-                  TARGET: ${formatPrice(tpVal)}
-                </span>
-              </div>
-
-              <div className="w-full flex items-center justify-end space-x-1.5">
-                <div className="flex-1 border-b-2 border-solid border-cyan-400"></div>
-                <span className="bg-cyan-500 text-black text-[10px] font-black font-mono px-2 py-0.5 rounded shadow-lg shadow-cyan-500/30">
-                  ENTRY: ${formatPrice(entryVal)}
-                </span>
-              </div>
-
-              <div className="w-full flex items-center justify-end space-x-1.5">
-                <div className="flex-1 border-b-2 border-dashed border-rose-500"></div>
-                <span className="bg-rose-500 text-white text-[10px] font-black font-mono px-2 py-0.5 rounded shadow-lg shadow-rose-500/30">
-                  STOP: ${formatPrice(slVal)}
-                </span>
-              </div>
-            </div>
-
+          {/* Clean Interactive TradingView Chart */}
+          <div className="w-full flex-grow h-[600px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
             <iframe
               key={selectedAsset.tvSymbol}
               title="TradingView Pro Chart"
