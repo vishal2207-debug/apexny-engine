@@ -1,46 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 
 export default function App() {
-  const [data, setData] = useState(null);
-  const containerRef = useRef(null);
+  const [price, setPrice] = useState(null);
 
   useEffect(() => {
     fetch('https://api.india.delta.exchange/v2/tickers')
       .then(r => r.json())
       .then(d => {
         const btc = d.result?.find(t => t.symbol === 'BTCUSD');
-        setData(btc);
+        if (btc) setPrice(btc.mark_price);
       })
       .catch(() => {});
-  }, []);
-
-  useEffect(() => {
-    if (!containerRef.current) return;
-    containerRef.current.innerHTML = '';
-
-    const script = document.createElement('script');
-    script.src = 'https://s3.tradingview.com/tv.js';
-    script.type = 'text/javascript';
-    script.async = true;
-    script.onload = () => {
-      if (window.TradingView) {
-        new window.TradingView.widget({
-          autosize: true,
-          symbol: 'BINANCE:BTCUSDT',
-          interval: '5',
-          timezone: 'Asia/Kolkata',
-          theme: 'dark',
-          style: '1',
-          locale: 'en',
-          toolbar_bg: '#0f172a',
-          enable_publishing: false,
-          allow_symbol_change: true,
-          container_id: 'tradingview_widget_container',
-        });
-      }
-    };
-
-    containerRef.current.appendChild(script);
   }, []);
 
   return (
@@ -52,7 +22,7 @@ export default function App() {
           <span className="text-xs text-gray-500">TradingView Live Data</span>
         </div>
         <div className="text-sm">
-          BTC: <span className="font-mono text-emerald-400 font-bold">${data?.mark_price || '80,800'}</span>
+          BTC: <span className="font-mono text-emerald-400 font-bold">${price || '80,862'}</span>
         </div>
       </header>
 
@@ -61,8 +31,8 @@ export default function App() {
           <h2 className="text-xs font-semibold text-gray-400 tracking-wider">WATCHLIST</h2>
           <div className="p-3 bg-[#1e222d] rounded border border-gray-700/50 flex justify-between items-center cursor-pointer">
             <div>
-              <div className="font-bold text-sm">BTCUSDT</div>
-              <div className="text-xs text-emerald-400 font-mono">${data?.mark_price || '80,800'}</div>
+              <div className="font-bold text-sm">BTCUSD</div>
+              <div className="text-xs text-emerald-400 font-mono">${price || '80,862'}</div>
             </div>
             <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">PERP</span>
           </div>
@@ -72,16 +42,20 @@ export default function App() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center space-x-2">
               <span className="text-xs bg-slate-800 px-2.5 py-1 rounded text-emerald-400 font-medium border border-emerald-500/20">Live</span>
-              <span className="text-xs text-gray-400">Bitcoin / Tether US (Interactive Chart)</span>
+              <span className="text-xs text-gray-400">Bitcoin / US Dollar (Advanced TradingView)</span>
             </div>
           </div>
 
-          <div className="w-full flex-grow min-h-[520px] rounded overflow-hidden" ref={containerRef}>
-            <div id="tradingview_widget_container" className="w-full h-[520px]" />
+          <div className="w-full flex-grow h-[550px] rounded overflow-hidden border border-gray-800 bg-[#0b0e14]">
+            <iframe
+              title="TradingView Chart"
+              className="w-full h-full border-0"
+              src="https://s.tradingview.com/widgetembed/?symbol=BINANCE%3ABTCUSDT&interval=5&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&hide_side_toolbar=0&allow_symbol_change=1&save_image=0"
+            />
           </div>
 
           <footer className="mt-4 p-3 bg-[#1e222d] rounded border border-gray-800 text-xs text-gray-400">
-            <span className="text-emerald-400 font-medium">Engine Status:</span> TradingView charts active. Monitoring NY Killzone...
+            <span className="text-emerald-400 font-medium">Engine Status:</span> TradingView Advanced Chart Active. Monitoring NY Killzone...
           </footer>
         </main>
       </div>
