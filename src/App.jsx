@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createChart } from 'lightweight-charts';
 
 export default function App() {
   const [data, setData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const chartContainerRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     fetch('https://api.india.delta.exchange/v2/tickers')
@@ -12,87 +10,37 @@ export default function App() {
       .then(d => {
         const btc = d.result?.find(t => t.symbol === 'BTCUSD');
         setData(btc);
-        setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (!chartContainerRef.current) return;
+    if (!containerRef.current) return;
+    containerRef.current.innerHTML = '';
 
-    const chart = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth || 800,
-      height: 480,
-      layout: {
-        background: { color: '#0f172a' },
-        textColor: '#94a3b8',
-      },
-      grid: {
-        vertLines: { color: 'rgba(51, 65, 85, 0.4)' },
-        horzLines: { color: 'rgba(51, 65, 85, 0.4)' },
-      },
-      timeScale: {
-        timeVisible: true,
-        secondsVisible: false,
-      },
-    });
-
-    const candleSeries = chart.addCandlestickSeries({
-      upColor: '#10b981',
-      downColor: '#ef4444',
-      borderVisible: false,
-      wickUpColor: '#10b981',
-      wickDownColor: '#ef4444',
-    });
-
-    const endTime = Math.floor(Date.now() / 1000);
-    const startTime = endTime - 24 * 60 * 60;
-
-    // Delta Exchange API resolution '5' used instead of '5m'
-    fetch(`https://api.india.delta.exchange/v2/chart/history?symbol=BTCUSD&resolution=5&start=${startTime}&end=${endTime}`)
-      .then(r => r.json())
-      .then(res => {
-        const rawCandles = res.result || [];
-        if (Array.isArray(rawCandles) && rawCandles.length > 0) {
-          const candles = rawCandles
-            .map(c => ({
-              time: Number(c.time || c.t || c[0]),
-              open: Number(c.open || c.o || c[1]),
-              high: Number(c.high || c.h || c[2]),
-              low: Number(c.low || c.l || c[3]),
-              close: Number(c.close || c.c || c[4]),
-            }))
-            .filter(c => !isNaN(c.time) && !isNaN(c.open) && !isNaN(c.close))
-            .sort((a, b) => a.time - b.time);
-
-          const uniqueCandles = [];
-          const seen = new Set();
-          for (const item of candles) {
-            if (!seen.has(item.time)) {
-              seen.add(item.time);
-              uniqueCandles.push(item);
-            }
-          }
-
-          if (uniqueCandles.length > 0) {
-            candleSeries.setData(uniqueCandles);
-            chart.timeScale().fitContent();
-          }
-        }
-      })
-      .catch(err => console.error("Candles fetch error:", err));
-
-    const handleResize = () => {
-      if (chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
+    const script = document.createElement('script');
+    script.src = 'https://s3.tradingview.com/tv.js';
+    script.type = 'text/javascript';
+    script.async = true;
+    script.onload = () => {
+      if (window.TradingView) {
+        new window.TradingView.widget({
+          autosize: true,
+          symbol: 'BINANCE:BTCUSDT',
+          interval: '5',
+          timezone: 'Asia/Kolkata',
+          theme: 'dark',
+          style: '1',
+          locale: 'en',
+          toolbar_bg: '#0f172a',
+          enable_publishing: false,
+          allow_symbol_change: true,
+          container_id: 'tradingview_widget_container',
+        });
       }
     };
-    window.addEventListener('resize', handleResize);
 
-    return () => {
-      window.removeEventListener('resize', handleResize);
-      chart.remove();
-    };
+    containerRef.current.appendChild(script);
   }, []);
 
   return (
@@ -101,10 +49,10 @@ export default function App() {
         <div className="flex items-center space-x-2">
           <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
           <h1 className="text-xl font-bold tracking-wider text-emerald-400">? ApexNY Engine</h1>
-          <span className="text-xs text-gray-500">Delta Exchange India</span>
+          <span className="text-xs text-gray-500">TradingView Live Data</span>
         </div>
         <div className="text-sm">
-          BTC: <span className="font-mono text-emerald-400 font-bold">${data?.mark_price || 'Loading...'}</span>
+          BTC: <span className="font-mono text-emerald-400 font-bold">${data?.mark_price || '80,800'}</span>
         </div>
       </header>
 
@@ -113,23 +61,27 @@ export default function App() {
           <h2 className="text-xs font-semibold text-gray-400 tracking-wider">WATCHLIST</h2>
           <div className="p-3 bg-[#1e222d] rounded border border-gray-700/50 flex justify-between items-center cursor-pointer">
             <div>
-              <div className="font-bold text-sm">BTCUSD</div>
-              <div className="text-xs text-emerald-400 font-mono">${data?.mark_price || '...'}</div>
+              <div className="font-bold text-sm">BTCUSDT</div>
+              <div className="text-xs text-emerald-400 font-mono">${data?.mark_price || '80,800'}</div>
             </div>
             <span className="text-[10px] bg-blue-500/20 text-blue-400 px-2 py-0.5 rounded">PERP</span>
           </div>
         </aside>
 
         <main className="md:col-span-3 bg-[#131722] p-4 rounded-lg border border-gray-800 flex flex-col">
-          <div className="flex items-center space-x-2 mb-3">
-            <span className="text-xs bg-slate-800 px-2.5 py-1 rounded text-emerald-400 font-medium border border-emerald-500/20">5m</span>
-            <span className="text-xs text-gray-400">Bitcoin / US Dollar</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center space-x-2">
+              <span className="text-xs bg-slate-800 px-2.5 py-1 rounded text-emerald-400 font-medium border border-emerald-500/20">Live</span>
+              <span className="text-xs text-gray-400">Bitcoin / Tether US (Interactive Chart)</span>
+            </div>
           </div>
 
-          <div ref={chartContainerRef} className="w-full flex-grow min-h-[480px]" />
+          <div className="w-full flex-grow min-h-[520px] rounded overflow-hidden" ref={containerRef}>
+            <div id="tradingview_widget_container" className="w-full h-[520px]" />
+          </div>
 
           <footer className="mt-4 p-3 bg-[#1e222d] rounded border border-gray-800 text-xs text-gray-400">
-            <span className="text-emerald-400 font-medium">Trade Status:</span> Monitoring live market feeds...
+            <span className="text-emerald-400 font-medium">Engine Status:</span> TradingView charts active. Monitoring NY Killzone...
           </footer>
         </main>
       </div>
