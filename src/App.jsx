@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// Strict Locked Institutional Assets (Never Fluctuate)
+// STRICTLY LOCKED INSTITUTIONAL ASSETS (Zero Fluctuation, 100% Static & Permanent)
 const INSTITUTIONAL_ASSETS = [
   { 
     symbol: 'BTCUSD', 
@@ -16,7 +16,7 @@ const INSTITUTIONAL_ASSETS = [
     sl: 79950.00,
     tp: 82630.00,
     smcZone: '5M Discount FVG & Asian Session Low Sweep',
-    logic: 'Bullish BOS confirmed. Price swept Asian liquidity lows and retraced into the 50% OTE Discount FVG zone. Entry is locked completely.'
+    logic: 'Bullish BOS confirmed. Price swept Asian liquidity lows and retraced into the 50% OTE Discount FVG zone. Entry is permanently locked.'
   },
   { 
     symbol: 'ETHUSD', 
@@ -169,7 +169,7 @@ export default function App() {
     setSelectedNews(list[0]);
   }, [selectedAsset]);
 
-  // Live prices feed for ticker watchlist only
+  // Live prices for watchlist ticker only
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -221,7 +221,7 @@ export default function App() {
   const cmp = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
   const isSmallAsset = cmp < 10;
   
-  // STRICTLY LOCKED VALUES FROM SELECTED ASSET (NO DYNAMIC FLUCTUATION)
+  // DIRECTLY USE STATIC VALUES FROM SELECTED ASSET (ZERO COMPUTATION = ZERO FLUCTUATION)
   const activeStructure = {
     bias: selectedAsset.bias,
     entry: selectedAsset.entry,
@@ -288,7 +288,7 @@ export default function App() {
             <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
               APEX<span className="text-emerald-400">PRO</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                TERMINAL v8.0
+                TERMINAL v8.2
               </span>
             </h1>
             <p className="text-[11px] text-emerald-400 font-mono">
@@ -409,7 +409,7 @@ export default function App() {
           <div className="lg:col-span-2 space-y-4">
             {terminalMode === 'SMC' && (
               <div className="space-y-4">
-                {/* Strict Structure Setup Bar with LONG/SHORT Badge */}
+                {/* Setup Bar with LONG/SHORT Badge */}
                 <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
                   <div className="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-2">
                     <div>
@@ -440,7 +440,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* SMC Execution Logic Breakdown */}
+                  {/* SMC Execution Logic */}
                   <div className="bg-[#0d1322] p-3 rounded-lg border border-slate-800/80 space-y-2 text-xs">
                     <div className="flex justify-between items-center">
                       <span className="text-cyan-400 font-mono font-bold uppercase tracking-wider">
@@ -641,11 +641,11 @@ export default function App() {
                 <span className="text-cyan-300 font-bold">${formatPrice(activeStructure.entry)}</span>
               </div>
               <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40">
-                <span className="text-slate-400 text-[10px]">SL: </span>
+                <span className="text-rose-400 text-[10px]">SL: </span>
                 <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
               </div>
               <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
-                <span className="text-slate-400 text-[10px]">TP: </span>
+                <span className="text-emerald-400 text-[10px]">TP: </span>
                 <span className="text-emerald-300 font-bold">${formatPrice(activeStructure.tp)}</span>
               </div>
             </div>
