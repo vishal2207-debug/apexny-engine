@@ -1,63 +1,86 @@
 import React, { useState, useEffect } from 'react';
 
 const ALL_ASSETS = [
-  { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto', basePrice: 80967.50, strikeStep: 1000, hasOptions: true },
-  { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto', basePrice: 2501.20, strikeStep: 50, hasOptions: true },
-  { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto', basePrice: 104.50, strikeStep: 5, hasOptions: false },
-  { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto', basePrice: 1.4500, strikeStep: 0.1, hasOptions: false },
-  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodities', basePrice: 4493.05, strikeStep: 25, hasOptions: false },
-  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 42.50, strikeStep: 1, hasOptions: false },
+  { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto', basePrice: 80967.50, strikeStep: 1000, hasOptions: true, newsType: 'CRYPTO' },
+  { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto', basePrice: 2501.20, strikeStep: 50, hasOptions: true, newsType: 'CRYPTO' },
+  { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto', basePrice: 104.50, strikeStep: 5, hasOptions: false, newsType: 'CRYPTO' },
+  { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto', basePrice: 1.4500, strikeStep: 0.1, hasOptions: false, newsType: 'CRYPTO' },
+  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodities', basePrice: 4493.05, strikeStep: 25, hasOptions: false, newsType: 'COMMODITY' },
+  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 42.50, strikeStep: 1, hasOptions: false, newsType: 'COMMODITY' },
 ];
 
-const GLOBAL_NEWS_DATA = [
-  {
-    id: 1,
-    event: 'US Core CPI (YoY)',
-    impact: 'HIGH',
-    time: '18:00 IST',
-    forecast: '2.8%',
-    previous: '2.9%',
-    status: 'High Volatility Expected',
-    scenarioBullish: 'Actual < Forecast: DXY Dump -> Massive Pump on Gold, BTC & Risk Assets (Long Bias).',
-    scenarioBearish: 'Actual > Forecast: DXY Spike -> Sharp Liquidation on BTC & Gold (Short Bias).'
-  },
-  {
-    id: 2,
-    event: 'Federal Reserve Interest Rate Decision (FOMC)',
-    impact: 'HIGH',
-    time: '23:30 IST',
-    forecast: '4.75%',
-    previous: '5.00%',
-    status: 'Institutional Liquidity Spike',
-    scenarioBullish: 'Dovish Rate Cut (-25bps / -50bps): Weak Dollar liquidity expands crypto and commodities.',
-    scenarioBearish: 'Hawkish Pause / Stance: Yields surge, sudden sweeps of Asian & London session lows.'
-  },
-  {
-    id: 3,
-    event: 'US Non-Farm Payrolls (NFP)',
-    impact: 'HIGH',
-    time: '18:00 IST',
-    forecast: '145K',
-    previous: '160K',
-    status: 'Initial Liquidity Grab Zone',
-    scenarioBullish: 'Weaker Job Data: Confirms economic cooldown, instant short-squeeze on Gold & ETH.',
-    scenarioBearish: 'Hot Job Print: Heavy dollar demand, equal highs act as liquidity traps.'
-  }
-];
+const ASSET_SPECIFIC_NEWS = {
+  CRYPTO: [
+    {
+      id: 1,
+      event: 'US Core CPI & Liquidations',
+      impact: 'HIGH',
+      time: '18:00 IST',
+      forecast: '2.8%',
+      previous: '2.9%',
+      status: 'High Leverage Volatility',
+      scenarioBullish: 'Actual < Forecast: Dollar weakens, massive short squeeze on BTC & ETH perpetuals.',
+      scenarioBearish: 'Actual > Forecast: Yields surge, long positions wiped out near key support.'
+    },
+    {
+      id: 2,
+      event: 'Federal Reserve Rate Decision',
+      impact: 'HIGH',
+      time: '23:30 IST',
+      forecast: '4.75%',
+      previous: '5.00%',
+      status: 'Macro Liquidity Expansion',
+      scenarioBullish: 'Dovish Cut: Crypto institutional inflows accelerate into risk-on assets.',
+      scenarioBearish: 'Hawkish Stance: Immediate liquidity contraction, sweep of local lows.'
+    }
+  ],
+  COMMODITY: [
+    {
+      id: 1,
+      event: 'US Non-Farm Payrolls (NFP)',
+      impact: 'HIGH',
+      time: '18:00 IST',
+      forecast: '145K',
+      previous: '160K',
+      status: 'Safe Haven Volatility',
+      scenarioBullish: 'Weak Job Report: Gold & Silver surge as USD index drops sharply.',
+      scenarioBearish: 'Strong Job Report: Real yields rise, precious metals face profit booking.'
+    },
+    {
+      id: 2,
+      event: 'Global Central Bank Gold Reserves & CPI',
+      impact: 'HIGH',
+      time: '19:30 IST',
+      forecast: '2.8%',
+      previous: '2.9%',
+      status: 'Inflation Hedge Catalyst',
+      scenarioBullish: 'Persistent Inflation: Strong institutional demand for physical and spot XAU/XAG.',
+      scenarioBearish: 'Cooling Inflation: Short-term correction in bullion spot prices.'
+    }
+  ]
+};
 
 export default function App() {
-  const [terminalMode, setTerminalMode] = useState('SMC'); // 'SMC' or 'OPTIONS'
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' or 'chart'
+  const [terminalMode, setTerminalMode] = useState('SMC'); 
+  const [activeTab, setActiveTab] = useState('dashboard'); 
   const [prices, setPrices] = useState({});
   const [selectedAsset, setSelectedAsset] = useState(ALL_ASSETS[0]);
   const [structure, setStructure] = useState({});
   const [timeUTC, setTimeUTC] = useState('');
-  const [activeSession, setActiveSession] = useState({ name: '24H GLOBAL' });
-  const [selectedNews, setSelectedNews] = useState(GLOBAL_NEWS_DATA[0]);
+  const [activeSession, setActiveSession] = useState({ name: 'NEW YORK SESSION' });
   const [optionStrat, setOptionStrat] = useState('STRANGLE');
   const [contractQty, setContractQty] = useState(1);
 
-  // Live prices
+  // Filter news dynamically based on selected asset type (Crypto vs Commodity)
+  const currentNewsList = ASSET_SPECIFIC_NEWS[selectedAsset.newsType] || ASSET_SPECIFIC_NEWS.CRYPTO;
+  const [selectedNews, setSelectedNews] = useState(currentNewsList[0]);
+
+  // Update selected news when asset changes
+  useEffect(() => {
+    const list = ASSET_SPECIFIC_NEWS[selectedAsset.newsType] || ASSET_SPECIFIC_NEWS.CRYPTO;
+    setSelectedNews(list[0]);
+  }, [selectedAsset]);
+
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -84,7 +107,6 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Clock and Sessions
   useEffect(() => {
     const track24hSessions = () => {
       const now = new Date();
@@ -106,7 +128,6 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // Bi-directional Structure Engine
   useEffect(() => {
     const currentCMP = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
     const step = currentCMP < 10 ? 0.05 : currentCMP * 0.004;
@@ -162,7 +183,7 @@ export default function App() {
   const isLong = activeStructure.bias === 'LONG';
   const formatPrice = (val) => isSmallAsset ? Number(val || 0).toFixed(4) : Number(val || 0).toFixed(2);
 
-  // Option Engine Calculations (BTC & ETH)
+  // Option Engine
   const optionAsset = selectedAsset.hasOptions ? selectedAsset : ALL_ASSETS[0];
   const optCMP = prices[optionAsset.symbol]?.price || optionAsset.basePrice;
   const optStep = optionAsset.strikeStep;
@@ -178,7 +199,7 @@ export default function App() {
   const OPTION_STRATEGIES = {
     STRANGLE: {
       name: 'Delta Short Strangle',
-      type: 'Pure Theta Decay (Neutral)',
+      type: 'Pure Theta Decay',
       legs: [
         { action: 'SELL', type: 'CE', strike: otmCallSell, premium: callPremium },
         { action: 'SELL', type: 'PE', strike: otmPutSell, premium: putPremium },
@@ -187,35 +208,20 @@ export default function App() {
       lowerBreakeven: otmPutSell - (callPremium + putPremium),
       upperBreakeven: otmCallSell + (callPremium + putPremium),
       pop: '78%',
-      logic: `Collects double theta decay. Maximum profit realized if ${optionAsset.symbol} settles between $${otmPutSell} and $${otmCallSell}.`
     },
     CONDOR: {
-      name: 'Iron Condor (Protected)',
-      type: 'Defined Risk Theta Spread',
+      name: 'Iron Condor',
+      type: 'Protected Spread',
       legs: [
-        { action: 'BUY', type: 'CE', strike: otmCallBuy, premium: wingPremium },
-        { action: 'SELL', type: 'CE', strike: otmCallSell, premium: callPremium },
-        { action: 'SELL', type: 'PE', strike: otmPutSell, premium: putPremium },
-        { action: 'BUY', type: 'PE', strike: otmPutBuy, premium: wingPremium },
+        { action: 'BUY', type: 'CE Wing', strike: otmCallBuy, premium: wingPremium },
+        { action: 'SELL', type: 'CE Sell', strike: otmCallSell, premium: callPremium },
+        { action: 'SELL', type: 'PE Sell', strike: otmPutSell, premium: putPremium },
+        { action: 'BUY', type: 'PE Wing', strike: otmPutBuy, premium: wingPremium },
       ],
       netCredit: ((callPremium + putPremium) - (wingPremium * 2)) * contractQty,
       lowerBreakeven: otmPutSell - ((callPremium + putPremium) - (wingPremium * 2)),
       upperBreakeven: otmCallSell + ((callPremium + putPremium) - (wingPremium * 2)),
       pop: '82%',
-      logic: `Wings protect capital against sudden macro announcements while generating daily decay.`
-    },
-    BULL_PUT: {
-      name: 'Bull Put Credit Spread',
-      type: 'Bullish Bias Theta Sell',
-      legs: [
-        { action: 'SELL', type: 'PE', strike: otmPutSell, premium: putPremium },
-        { action: 'BUY', type: 'PE', strike: otmPutBuy, premium: wingPremium },
-      ],
-      netCredit: (putPremium - wingPremium) * contractQty,
-      lowerBreakeven: otmPutSell - (putPremium - wingPremium),
-      upperBreakeven: optCMP,
-      pop: '75%',
-      logic: `High win-rate seller setup anchored below key support. Captures decay as long as market holds above $${otmPutSell}.`
     }
   };
 
@@ -223,7 +229,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#05070b] text-slate-200 p-3 md:p-5 font-sans selection:bg-emerald-500 selection:text-black">
-      {/* Top Header */}
+      {/* Header */}
       <header className="flex flex-wrap items-center justify-between pb-4 mb-4 border-b border-slate-800/80 gap-3">
         <div className="flex items-center space-x-3">
           <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
@@ -231,16 +237,15 @@ export default function App() {
             <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
               APEX<span className="text-emerald-400">PRO</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                TERMINAL v5.5
+                TERMINAL v5.8
               </span>
             </h1>
             <p className="text-[11px] text-emerald-400 font-mono">By Mr. Vishal Langade • SMC & Delta Options Architecture</p>
           </div>
         </div>
 
-        {/* Global Controls & Mode Switcher */}
+        {/* Global Controls & Clean Mode Switcher (No ? marks) */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Main Mode Toggle: SMC vs Delta Options */}
           <div className="flex bg-[#0d1322] p-1 rounded-lg border border-slate-800">
             <button
               onClick={() => { setTerminalMode('SMC'); setActiveTab('dashboard'); }}
@@ -248,7 +253,7 @@ export default function App() {
                 terminalMode === 'SMC' ? 'bg-emerald-500 text-black shadow' : 'text-slate-400 hover:text-white'
               }`}
             >
-              ?? SMC & Macro
+              SMC & Macro
             </button>
             <button
               onClick={() => { setTerminalMode('OPTIONS'); setActiveTab('dashboard'); }}
@@ -256,11 +261,10 @@ export default function App() {
                 terminalMode === 'OPTIONS' ? 'bg-cyan-500 text-black shadow' : 'text-cyan-400 hover:text-cyan-300'
               }`}
             >
-              ? Delta Option Selling
+              Delta Option Selling
             </button>
           </div>
 
-          {/* Tab: Dashboard vs Chart */}
           <div className="flex bg-[#0d1322] p-1 rounded-lg border border-slate-800">
             <button
               onClick={() => setActiveTab('dashboard')}
@@ -276,7 +280,7 @@ export default function App() {
                 activeTab === 'chart' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-400 hover:text-indigo-300'
               }`}
             >
-              <span>?? Open Chart</span>
+              <span>Open Chart</span>
             </button>
           </div>
 
@@ -288,16 +292,16 @@ export default function App() {
         </div>
       </header>
 
-      {/* VIEW 1: DASHBOARD (Switchable between SMC/Macro vs Option Selling) */}
+      {/* DASHBOARD VIEW */}
       {activeTab === 'dashboard' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* Left Column: Universal Watchlist (All 6 Assets) */}
+          {/* Watchlist */}
           <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
             <div className="flex justify-between items-center px-1">
               <span className="text-xs font-bold text-slate-400 font-mono tracking-wider">
                 WATCHLIST ({ALL_ASSETS.length} ASSETS)
               </span>
-              <span className="text-[10px] text-emerald-400 font-mono">Synced Feed</span>
+              <span className="text-[10px] text-emerald-400 font-mono">Live Feed</span>
             </div>
 
             <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
@@ -321,11 +325,6 @@ export default function App() {
                       <div className="font-bold text-sm text-white flex items-center gap-1.5">
                         {asset.symbol}
                         <span className="text-xs text-slate-400 font-normal">({asset.name})</span>
-                        {asset.hasOptions && (
-                          <span className="text-[9px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-1 rounded font-mono">
-                            OPT
-                          </span>
-                        )}
                       </div>
                       <div className="text-xs font-mono text-emerald-400 font-bold mt-0.5">
                         ${formatPrice(p)}
@@ -344,7 +343,7 @@ export default function App() {
                           setSelectedAsset(asset);
                           setActiveTab('chart');
                         }}
-                        className="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-xs px-2 py-1 rounded font-mono transition"
+                        className="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-xs px-2.5 py-1 rounded font-mono transition"
                       >
                         Chart ?
                       </button>
@@ -355,12 +354,11 @@ export default function App() {
             </div>
           </div>
 
-          {/* Right 2 Columns: DYNAMIC DISPLAY (SMC & News OR Delta Option Selling) */}
+          {/* Right Content */}
           <div className="lg:col-span-2 space-y-4">
-            {/* SUB-VIEW A: SMC & GLOBAL NEWS MODE */}
             {terminalMode === 'SMC' && (
               <div className="space-y-4">
-                {/* Active SMC Level Bar */}
+                {/* Active Setup Bar */}
                 <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-3">
                   <div>
                     <span className="text-xs text-slate-400 font-mono block">ACTIVE ASSET SETUP:</span>
@@ -382,57 +380,59 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Macro News Matrix */}
+                {/* Asset-Specific Macro News Matrix */}
                 <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                     <div className="flex items-center space-x-2">
                       <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
                       <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
-                        GLOBAL MACRO IMPACT SCENARIOS
+                        MACRO IMPACT SCENARIOS FOR {selectedAsset.symbol}
                       </span>
                     </div>
-                    <span className="text-[10px] font-mono text-slate-400">CPI • FOMC • NFP</span>
+                    <span className="text-[10px] font-mono text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                      {selectedAsset.newsType} FEED ACTIVE
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                    {GLOBAL_NEWS_DATA.map(news => (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {currentNewsList.map(news => (
                       <div
                         key={news.id}
                         onClick={() => setSelectedNews(news)}
-                        className={`p-2.5 rounded-lg border cursor-pointer transition text-xs font-mono ${
+                        className={`p-3 rounded-lg border cursor-pointer transition text-xs font-mono ${
                           selectedNews.id === news.id ? 'bg-rose-500/15 border-rose-500 text-white shadow' : 'bg-[#0d1322] border-slate-800 text-slate-400 hover:border-slate-700'
                         }`}
                       >
                         <div className="flex justify-between items-center mb-1">
-                          <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.2 rounded text-[9px] font-bold">
-                            {news.impact}
+                          <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                            {news.impact} IMPACT
                           </span>
                           <span className="text-[10px] text-slate-400">{news.time}</span>
                         </div>
-                        <div className="font-bold text-xs text-slate-200 mt-1 truncate">{news.event}</div>
-                        <div className="text-[10px] text-slate-500 mt-1 flex justify-between">
-                          <span>Exp: {news.forecast}</span>
-                          <span>Prev: {news.previous}</span>
+                        <div className="font-bold text-xs text-slate-200 mt-1">{news.event}</div>
+                        <div className="text-[10px] text-slate-500 mt-2 flex justify-between">
+                          <span>Forecast: {news.forecast}</span>
+                          <span>Previous: {news.previous}</span>
                         </div>
                       </div>
                     ))}
                   </div>
 
                   {/* Scenarios Display */}
-                  <div className="bg-[#0d1322] p-3 rounded-lg border border-slate-800 text-xs space-y-2">
+                  <div className="bg-[#0d1322] p-3.5 rounded-lg border border-slate-800 text-xs space-y-2">
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-white">? Impact Scenario: {selectedNews.event}</span>
+                      <span className="font-bold text-white">Impact Analysis: {selectedNews.event}</span>
                       <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
                         {selectedNews.status}
                       </span>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs pt-1">
                       <div className="p-2.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-                        <span className="font-bold text-emerald-400 block font-mono">?? Bullish Scenario:</span>
+                        <span className="font-bold text-emerald-400 block font-mono">Bullish Scenario:</span>
                         {selectedNews.scenarioBullish}
                       </div>
                       <div className="p-2.5 rounded bg-rose-500/10 border border-rose-500/20 text-rose-300">
-                        <span className="font-bold text-rose-400 block font-mono">?? Bearish Scenario:</span>
+                        <span className="font-bold text-rose-400 block font-mono">Bearish Scenario:</span>
                         {selectedNews.scenarioBearish}
                       </div>
                     </div>
@@ -441,23 +441,20 @@ export default function App() {
               </div>
             )}
 
-            {/* SUB-VIEW B: DELTA OPTION SELLING ENGINE (BTC & ETH) */}
             {terminalMode === 'OPTIONS' && (
               <div className="space-y-4">
-                {/* Option Strategy Switcher */}
                 <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
                   <div className="flex justify-between items-center border-b border-slate-800 pb-2">
                     <span className="text-xs font-bold text-cyan-400 font-mono tracking-wider uppercase">
                       DELTA INDIA OPTION SELLING ENGINE ({optionAsset.symbol})
                     </span>
-                    <span className="text-[10px] text-slate-400 font-mono">Daily 17:30 IST Expiry</span>
+                    <span className="text-[10px] text-slate-400 font-mono">Daily Expiry</span>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-2">
                     {[
                       { id: 'STRANGLE', name: 'Short Strangle', badge: 'Max Theta Decay' },
                       { id: 'CONDOR', name: 'Iron Condor', badge: 'Protected Wings' },
-                      { id: 'BULL_PUT', name: 'Bull Put Spread', badge: 'Support Credit' },
                     ].map(strat => (
                       <div
                         key={strat.id}
@@ -474,14 +471,13 @@ export default function App() {
                     ))}
                   </div>
 
-                  {/* Strategy Metrics Cards */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono pt-1">
                     <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800">
                       <span className="text-[10px] text-slate-500 block">MAX PROFIT</span>
                       <span className="text-emerald-400 font-bold text-sm">+${currentOption.netCredit}</span>
                     </div>
                     <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800">
-                      <span className="text-[10px] text-slate-500 block">EST. WIN RATE</span>
+                      <span className="text-[10px] text-slate-500 block">WIN RATE</span>
                       <span className="text-cyan-300 font-bold text-sm">{currentOption.pop}</span>
                     </div>
                     <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800">
@@ -495,10 +491,9 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Option Legs Table */}
                 <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-2">
                   <div className="text-xs font-bold text-white font-mono uppercase tracking-wider">
-                    EXECUTION LEGS (DELTA EXCHANGE ORDER SHEET)
+                    EXECUTION LEGS (DELTA EXCHANGE)
                   </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-xs font-mono text-left">
@@ -532,7 +527,7 @@ export default function App() {
               </div>
             )}
 
-            {/* Quick Chart Launch Banner */}
+            {/* Launch Chart Banner */}
             <div className="p-3.5 rounded-xl bg-gradient-to-r from-indigo-600/10 via-[#0d1322] to-transparent border border-indigo-500/30 flex justify-between items-center">
               <div>
                 <span className="text-xs text-white font-bold block">Ready to View Technical Candlesticks?</span>
@@ -549,7 +544,7 @@ export default function App() {
         </div>
       )}
 
-      {/* VIEW 2: DEDICATED FULL-SCREEN TRADINGVIEW CHART */}
+      {/* CHART VIEW */}
       {activeTab === 'chart' && (
         <div className="space-y-3">
           <div className="bg-[#090d16] p-3 rounded-xl border border-slate-800 flex flex-wrap items-center justify-between gap-3 shadow-lg">
@@ -597,7 +592,7 @@ export default function App() {
       <footer className="mt-4 p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
         <div className="flex items-center gap-2 font-mono">
           <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-          <span>Dual Architecture: Complete Watchlist + SMC & Delta Option Selling</span>
+          <span>Asset-Specific Filtering & Clean Terminal UI</span>
         </div>
         <div className="font-mono text-emerald-400 font-bold">
           Crafted with Precision by Mr. Vishal Langade
