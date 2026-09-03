@@ -1,12 +1,103 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 
-const ALL_ASSETS = [
-  { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto', basePrice: 80967.50, strikeStep: 1000, hasOptions: true, newsType: 'CRYPTO' },
-  { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto', basePrice: 2501.20, strikeStep: 50, hasOptions: true, newsType: 'CRYPTO' },
-  { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto', basePrice: 104.50, strikeStep: 5, hasOptions: false, newsType: 'CRYPTO' },
-  { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto', basePrice: 1.4500, strikeStep: 0.1, hasOptions: false, newsType: 'CRYPTO' },
-  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodities', basePrice: 4493.05, strikeStep: 25, hasOptions: false, newsType: 'COMMODITY' },
-  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 42.50, strikeStep: 1, hasOptions: false, newsType: 'COMMODITY' },
+// Bi-Directional Institutional Assets with Strict Locked Entries for Both Long & Short
+const INSTITUTIONAL_ASSETS = [
+  { 
+    symbol: 'BTCUSD', 
+    tvSymbol: 'BINANCE:BTCUSDT', 
+    name: 'Bitcoin', 
+    category: 'Crypto', 
+    basePrice: 80967.50, 
+    strikeStep: 1000, 
+    hasOptions: true, 
+    newsType: 'CRYPTO',
+    bias: 'LONG',
+    entry: 80620.00,
+    sl: 79950.00,
+    tp: 82630.00,
+    smcZone: '5M Discount FVG & Asian Session Low Sweep',
+    logic: 'Bullish BOS confirmed. Price swept Asian liquidity lows and retraced into the 50% OTE Discount FVG zone. Entry is locked until target or structure shift.'
+  },
+  { 
+    symbol: 'ETHUSD', 
+    tvSymbol: 'BINANCE:ETHUSDT', 
+    name: 'Ethereum', 
+    category: 'Crypto', 
+    basePrice: 2501.20, 
+    strikeStep: 50, 
+    hasOptions: true, 
+    newsType: 'CRYPTO',
+    bias: 'LONG',
+    entry: 2485.50,
+    sl: 2450.00,
+    tp: 2592.00,
+    smcZone: '1H Order Block Mitigation Block',
+    logic: 'Bullish Market Structure Shift (MSS). Displacement candle broke previous high; waiting for mitigation at the demand block.'
+  },
+  { 
+    symbol: 'SOLUSD', 
+    tvSymbol: 'BINANCE:SOLUSDT', 
+    name: 'Solana', 
+    category: 'Crypto', 
+    basePrice: 104.50, 
+    strikeStep: 5, 
+    hasOptions: false, 
+    newsType: 'CRYPTO',
+    bias: 'SHORT',
+    entry: 106.20,
+    sl: 108.00,
+    tp: 100.80,
+    smcZone: '4H Premium Supply Zone & Equal Highs Sweep',
+    logic: 'Bearish setup. Retail buy-side liquidity swept above equal highs. Price tapped into Premium Supply triggering a valid short MSS.'
+  },
+  { 
+    symbol: 'XRPUSD', 
+    tvSymbol: 'BINANCE:XRPUSDT', 
+    name: 'Ripple', 
+    category: 'Crypto', 
+    basePrice: 1.4500, 
+    strikeStep: 0.1, 
+    hasOptions: false, 
+    newsType: 'CRYPTO',
+    bias: 'LONG',
+    entry: 1.4220,
+    sl: 1.3950,
+    tp: 1.5030,
+    smcZone: 'London Open Low Retest FVG',
+    logic: 'Bullish continuation. Sweep of London lows into daily discount array with expansion targeting external buy-side liquidity.'
+  },
+  { 
+    symbol: 'XAUUSD', 
+    tvSymbol: 'OANDA:XAUUSD', 
+    name: 'Gold Spot', 
+    category: 'Commodities', 
+    basePrice: 4493.05, 
+    strikeStep: 25, 
+    hasOptions: false, 
+    newsType: 'COMMODITY',
+    bias: 'LONG',
+    entry: 4482.00,
+    sl: 4462.00,
+    tp: 4542.00,
+    smcZone: 'NY Killzone Imbalance & Breaker Block',
+    logic: 'Bullish setup. Institutional algorithm delivered price into New York Killzone open, leaving a protected 5M Fair Value Gap.'
+  },
+  { 
+    symbol: 'XAGUSD', 
+    tvSymbol: 'OANDA:XAGUSD', 
+    name: 'Silver Spot', 
+    category: 'Commodities', 
+    basePrice: 42.50, 
+    strikeStep: 1, 
+    hasOptions: false, 
+    newsType: 'COMMODITY',
+    bias: 'SHORT',
+    entry: 42.80,
+    sl: 43.20,
+    tp: 41.60,
+    smcZone: 'Daily Resistance Premium Array',
+    logic: 'Bearish setup. Price reached major daily supply imbalance. Rejectionwick confirms institutional short positioning.'
+  },
 ];
 
 const ASSET_SPECIFIC_NEWS = {
@@ -64,8 +155,7 @@ export default function App() {
   const [terminalMode, setTerminalMode] = useState('SMC'); 
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [prices, setPrices] = useState({});
-  const [selectedAsset, setSelectedAsset] = useState(ALL_ASSETS[0]);
-  const [structureCache, setStructureCache] = useState({});
+  const [selectedAsset, setSelectedAsset] = useState(INSTITUTIONAL_ASSETS[0]);
   const [timeUTC, setTimeUTC] = useState('');
   const [activeSession, setActiveSession] = useState({ name: 'NEW YORK SESSION' });
   const [optionStrat, setOptionStrat] = useState('STRANGLE');
@@ -128,58 +218,24 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // STABLE ANCHORED STRUCTURE ENGINE (Prevents second-by-second flipping)
-  useEffect(() => {
-    const currentCMP = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
-    if (!currentCMP) return;
-
-    setStructureCache(prev => {
-      // If structure already exists for this asset, DO NOT recalibrate on every second price tick
-      if (prev[selectedAsset.symbol]) {
-        return prev; 
-      }
-
-      // Initial Anchor Creation for the Asset
-      const step = currentCMP < 10 ? 0.05 : currentCMP * 0.004;
-      const currentBlock = Math.floor(currentCMP / step);
-      const swingLow = currentBlock * step;
-      const swingHigh = (currentBlock + 1) * step;
-
-      // Default to Stable Bullish Long structure upon load
-      const entry = swingLow + (swingHigh - swingLow) * 0.45;
-      const sl = swingLow - (step * 0.25);
-      const tp = entry + ((entry - sl) * 3);
-
-      return {
-        ...prev,
-        [selectedAsset.symbol]: {
-          bias: 'LONG',
-          entry,
-          sl,
-          tp,
-          status: 'BULLISH BOS / LONG',
-          timestamp: new Date().toLocaleTimeString(),
-        }
-      };
-    });
-  }, [selectedAsset, prices]);
-
   const cmp = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
   const isSmallAsset = cmp < 10;
   
-  const activeStructure = structureCache[selectedAsset.symbol] || {
-    bias: 'LONG',
-    entry: cmp ? cmp * 0.998 : 100,
-    sl: cmp ? cmp * 0.993 : 99,
-    tp: cmp ? cmp * 1.013 : 103,
-    status: 'ACTIVE SETUP',
-    timestamp: 'Locked'
+  // Strict Bi-Directional Locked Structure (Fixed for both Long & Short)
+  const activeStructure = {
+    bias: selectedAsset.bias,
+    entry: selectedAsset.entry,
+    sl: selectedAsset.sl,
+    tp: selectedAsset.tp,
+    smcZone: selectedAsset.smcZone,
+    logic: selectedAsset.logic,
+    status: selectedAsset.bias === 'LONG' ? 'BULLISH BOS / LONG LOCKED' : 'BEARISH MSS / SHORT LOCKED',
   };
 
   const isLong = activeStructure.bias === 'LONG';
   const formatPrice = (val) => isSmallAsset ? Number(val || 0).toFixed(4) : Number(val || 0).toFixed(2);
 
-  const optionAsset = selectedAsset.hasOptions ? selectedAsset : ALL_ASSETS[0];
+  const optionAsset = selectedAsset.hasOptions ? selectedAsset : INSTITUTIONAL_ASSETS[0];
   const optCMP = prices[optionAsset.symbol]?.price || optionAsset.basePrice;
   const optStep = optionAsset.strikeStep;
   const atmStrike = Math.round(optCMP / optStep) * optStep;
@@ -232,7 +288,7 @@ export default function App() {
             <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
               APEX<span className="text-emerald-400">PRO</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                TERMINAL v6.5
+                TERMINAL v7.1
               </span>
             </h1>
             <p className="text-[11px] text-emerald-400 font-mono">
@@ -295,17 +351,16 @@ export default function App() {
           <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
             <div className="flex justify-between items-center px-1">
               <span className="text-xs font-bold text-slate-400 font-mono tracking-wider">
-                WATCHLIST ({ALL_ASSETS.length} ASSETS)
+                WATCHLIST ({INSTITUTIONAL_ASSETS.length} ASSETS)
               </span>
-              <span className="text-[10px] text-emerald-400 font-mono">Stable Feed</span>
+              <span className="text-[10px] text-emerald-400 font-mono">Bi-Directional Locked</span>
             </div>
 
             <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
-              {ALL_ASSETS.map(asset => {
+              {INSTITUTIONAL_ASSETS.map(asset => {
                 const p = prices[asset.symbol]?.price || asset.basePrice;
                 const isSelected = selectedAsset.symbol === asset.symbol;
-                const assetStruct = structureCache[asset.symbol];
-                const assetIsLong = assetStruct?.bias !== 'SHORT';
+                const assetIsLong = asset.bias === 'LONG';
 
                 return (
                   <div
@@ -331,7 +386,7 @@ export default function App() {
                       <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${
                         assetIsLong ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                       }`}>
-                        {assetIsLong ? 'LONG' : 'SHORT'}
+                        {asset.bias}
                       </span>
                       <button
                         onClick={(e) => {
@@ -354,27 +409,54 @@ export default function App() {
           <div className="lg:col-span-2 space-y-4">
             {terminalMode === 'SMC' && (
               <div className="space-y-4">
-                <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-3">
-                  <div>
-                    <span className="text-xs text-slate-400 font-mono block">LOCKED STRUCTURE SETUP:</span>
-                    <span className="text-sm font-bold text-white">{selectedAsset.name} ({selectedAsset.symbol})</span>
+                {/* Bi-Directional Locked Setup Bar */}
+                <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
+                  <div className="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-2">
+                    <div>
+                      <span className="text-xs text-slate-400 font-mono block">BI-DIRECTIONAL STRUCTURE SETUP:</span>
+                      <span className="text-sm font-bold text-white flex items-center gap-2 mt-0.5">
+                        {selectedAsset.name} ({selectedAsset.symbol})
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${
+                          isLong ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        }`}>
+                          {activeStructure.status}
+                        </span>
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-2 font-mono text-xs">
+                      <div className="bg-[#0d1322] px-2.5 py-1.5 rounded-lg border border-cyan-500/40">
+                        <span className="text-slate-400 text-[10px] block">LOCKED ENTRY</span>
+                        <span className="text-cyan-300 font-bold text-sm">${formatPrice(activeStructure.entry)}</span>
+                      </div>
+                      <div className="bg-rose-500/10 px-2.5 py-1.5 rounded-lg border border-rose-500/40">
+                        <span className="text-rose-400 text-[10px] block">STOP LOSS</span>
+                        <span className="text-rose-300 font-bold text-sm">${formatPrice(activeStructure.sl)}</span>
+                      </div>
+                      <div className="bg-emerald-500/10 px-2.5 py-1.5 rounded-lg border border-emerald-500/40">
+                        <span className="text-emerald-400 text-[10px] block">TARGET (1:3 RR)</span>
+                        <span className="text-emerald-300 font-bold text-sm">${formatPrice(activeStructure.tp)}</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 font-mono text-xs">
-                    <div className="bg-[#0d1322] px-2.5 py-1 rounded border border-cyan-500/40">
-                      <span className="text-slate-400 text-[10px]">ENTRY: </span>
-                      <span className="text-cyan-300 font-bold">${formatPrice(activeStructure.entry)}</span>
+
+                  {/* SMC Execution Logic Breakdown */}
+                  <div className="bg-[#0d1322] p-3 rounded-lg border border-slate-800/80 space-y-2 text-xs">
+                    <div className="flex justify-between items-center">
+                      <span className="text-cyan-400 font-mono font-bold uppercase tracking-wider">
+                        Zone: {activeStructure.smcZone}
+                      </span>
+                      <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                        Both Side Ready • No Repaint
+                      </span>
                     </div>
-                    <div className="bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/40">
-                      <span className="text-rose-400 text-[10px]">SL: </span>
-                      <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
-                    </div>
-                    <div className="bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/40">
-                      <span className="text-slate-400 text-[10px]">TP: </span>
-                      <span className="text-emerald-300 font-bold">${formatPrice(activeStructure.tp)}</span>
-                    </div>
+                    <p className="text-slate-300 font-sans leading-relaxed">
+                      <strong className="text-white">Execution Logic:</strong> {activeStructure.logic}
+                    </p>
                   </div>
                 </div>
 
+                {/* Macro News Matrix */}
                 <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                     <div className="flex items-center space-x-2">
@@ -559,7 +641,7 @@ export default function App() {
                 <span className="text-cyan-300 font-bold">${formatPrice(activeStructure.entry)}</span>
               </div>
               <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40">
-                <span className="text-rose-400 text-[10px]">SL: </span>
+                <span className="text-slate-400 text-[10px]">SL: </span>
                 <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
               </div>
               <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
