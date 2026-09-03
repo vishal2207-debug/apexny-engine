@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 
 const ALL_ASSETS = [
   { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto', basePrice: 80967.50, strikeStep: 1000, hasOptions: true, newsType: 'CRYPTO' },
@@ -65,7 +65,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [prices, setPrices] = useState({});
   const [selectedAsset, setSelectedAsset] = useState(ALL_ASSETS[0]);
-  const [structure, setStructure] = useState({});
+  const [structureCache, setStructureCache] = useState({});
   const [timeUTC, setTimeUTC] = useState('');
   const [activeSession, setActiveSession] = useState({ name: 'NEW YORK SESSION' });
   const [optionStrat, setOptionStrat] = useState('STRANGLE');
@@ -79,6 +79,7 @@ export default function App() {
     setSelectedNews(list[0]);
   }, [selectedAsset]);
 
+  // Live prices feed
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -105,6 +106,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Clock
   useEffect(() => {
     const track24hSessions = () => {
       const now = new Date();
@@ -126,56 +128,52 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // STABLE ANCHORED STRUCTURE ENGINE (Prevents second-by-second flipping)
   useEffect(() => {
     const currentCMP = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
-    const step = currentCMP < 10 ? 0.05 : currentCMP * 0.004;
-    const currentBlock = Math.floor(currentCMP / step);
-    const swingLow = currentBlock * step;
-    const swingHigh = (currentBlock + 1) * step;
-    const midpoint = (swingLow + swingHigh) / 2;
+    if (!currentCMP) return;
 
-    setStructure(prev => {
-      const stored = prev[selectedAsset.symbol];
-      if (stored && currentCMP <= stored.swingHigh && currentCMP >= stored.swingLow) return prev;
-
-      const isBullish = currentCMP >= midpoint;
-      let entry, sl, tp, status;
-
-      if (isBullish) {
-        entry = swingLow + (swingHigh - swingLow) * 0.45;
-        sl = swingLow - (step * 0.25);
-        tp = entry + ((entry - sl) * 3);
-        status = 'BULLISH BOS / LONG';
-      } else {
-        entry = swingHigh - (swingHigh - swingLow) * 0.45;
-        sl = swingHigh + (step * 0.25);
-        tp = entry - ((sl - entry) * 3);
-        status = 'BEARISH MSS / SHORT';
+    setStructureCache(prev => {
+      // If structure already exists for this asset, DO NOT recalibrate on every second price tick
+      if (prev[selectedAsset.symbol]) {
+        return prev; 
       }
+
+      // Initial Anchor Creation for the Asset
+      const step = currentCMP < 10 ? 0.05 : currentCMP * 0.004;
+      const currentBlock = Math.floor(currentCMP / step);
+      const swingLow = currentBlock * step;
+      const swingHigh = (currentBlock + 1) * step;
+
+      // Default to Stable Bullish Long structure upon load
+      const entry = swingLow + (swingHigh - swingLow) * 0.45;
+      const sl = swingLow - (step * 0.25);
+      const tp = entry + ((entry - sl) * 3);
 
       return {
         ...prev,
         [selectedAsset.symbol]: {
-          bias: isBullish ? 'LONG' : 'SHORT',
+          bias: 'LONG',
           entry,
           sl,
           tp,
-          status,
+          status: 'BULLISH BOS / LONG',
           timestamp: new Date().toLocaleTimeString(),
         }
       };
     });
-  }, [prices, selectedAsset]);
+  }, [selectedAsset, prices]);
 
   const cmp = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
   const isSmallAsset = cmp < 10;
-  const activeStructure = structure[selectedAsset.symbol] || {
+  
+  const activeStructure = structureCache[selectedAsset.symbol] || {
     bias: 'LONG',
-    entry: cmp * 0.998,
-    sl: cmp * 0.993,
-    tp: cmp * 1.013,
-    status: 'ACTIVE',
-    timestamp: 'Live'
+    entry: cmp ? cmp * 0.998 : 100,
+    sl: cmp ? cmp * 0.993 : 99,
+    tp: cmp ? cmp * 1.013 : 103,
+    status: 'ACTIVE SETUP',
+    timestamp: 'Locked'
   };
 
   const isLong = activeStructure.bias === 'LONG';
@@ -234,7 +232,7 @@ export default function App() {
             <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
               APEX<span className="text-emerald-400">PRO</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                TERMINAL v6.4
+                TERMINAL v6.5
               </span>
             </h1>
             <p className="text-[11px] text-emerald-400 font-mono">
@@ -299,14 +297,14 @@ export default function App() {
               <span className="text-xs font-bold text-slate-400 font-mono tracking-wider">
                 WATCHLIST ({ALL_ASSETS.length} ASSETS)
               </span>
-              <span className="text-[10px] text-emerald-400 font-mono">Live Feed</span>
+              <span className="text-[10px] text-emerald-400 font-mono">Stable Feed</span>
             </div>
 
             <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
               {ALL_ASSETS.map(asset => {
                 const p = prices[asset.symbol]?.price || asset.basePrice;
                 const isSelected = selectedAsset.symbol === asset.symbol;
-                const assetStruct = structure[asset.symbol];
+                const assetStruct = structureCache[asset.symbol];
                 const assetIsLong = assetStruct?.bias !== 'SHORT';
 
                 return (
@@ -333,7 +331,7 @@ export default function App() {
                       <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${
                         assetIsLong ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                       }`}>
-                        {assetStruct?.bias || 'LONG'}
+                        {assetIsLong ? 'LONG' : 'SHORT'}
                       </span>
                       <button
                         onClick={(e) => {
@@ -358,7 +356,7 @@ export default function App() {
               <div className="space-y-4">
                 <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-3">
                   <div>
-                    <span className="text-xs text-slate-400 font-mono block">ACTIVE ASSET SETUP:</span>
+                    <span className="text-xs text-slate-400 font-mono block">LOCKED STRUCTURE SETUP:</span>
                     <span className="text-sm font-bold text-white">{selectedAsset.name} ({selectedAsset.symbol})</span>
                   </div>
                   <div className="flex items-center gap-2 font-mono text-xs">
@@ -561,7 +559,7 @@ export default function App() {
                 <span className="text-cyan-300 font-bold">${formatPrice(activeStructure.entry)}</span>
               </div>
               <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40">
-                <span className="text-slate-400 text-[10px]">SL: </span>
+                <span className="text-rose-400 text-[10px]">SL: </span>
                 <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
               </div>
               <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
