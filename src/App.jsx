@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const INSTITUTIONAL_ASSETS = [
   { 
@@ -294,12 +294,12 @@ export default function App() {
 
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex bg-[#0d1322] p-1 rounded-lg border border-slate-800">
-            <button onClick={() => { setTerminalMode('SMC'); setActiveTab('dashboard'); }} className={px-3 py-1 text-xs font-mono font-bold rounded-md transition }>SMC & Macro</button>
-            <button onClick={() => { setTerminalMode('OPTIONS'); setActiveTab('dashboard'); }} className={px-3 py-1 text-xs font-mono font-bold rounded-md transition }>Delta Option Selling</button>
+            <button onClick={() => { setTerminalMode('SMC'); setActiveTab('dashboard'); }} className={`px-3 py-1 text-xs font-mono font-bold rounded-md transition ${terminalMode === 'SMC' ? 'bg-emerald-500 text-black shadow' : 'text-slate-400 hover:text-white'}`}>SMC & Macro</button>
+            <button onClick={() => { setTerminalMode('OPTIONS'); setActiveTab('dashboard'); }} className={`px-3 py-1 text-xs font-mono font-bold rounded-md transition ${terminalMode === 'OPTIONS' ? 'bg-cyan-500 text-black shadow' : 'text-cyan-400 hover:text-cyan-300'}`}>Delta Option Selling</button>
           </div>
           <div className="flex bg-[#0d1322] p-1 rounded-lg border border-slate-800">
-            <button onClick={() => setActiveTab('dashboard')} className={px-3 py-1 text-xs font-mono font-bold rounded-md transition }>Dashboard</button>
-            <button onClick={() => setActiveTab('chart')} className={px-3 py-1 text-xs font-mono font-bold rounded-md transition flex items-center gap-1.5 }><span>Open Chart</span></button>
+            <button onClick={() => setActiveTab('dashboard')} className={`px-3 py-1 text-xs font-mono font-bold rounded-md transition ${activeTab === 'dashboard' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'}`}>Dashboard</button>
+            <button onClick={() => setActiveTab('chart')} className={`px-3 py-1 text-xs font-mono font-bold rounded-md transition flex items-center gap-1.5 ${activeTab === 'chart' ? 'bg-indigo-600 text-white shadow' : 'text-indigo-400 hover:text-indigo-300'}`}><span>Open Chart</span></button>
           </div>
           <div className="hidden lg:flex items-center gap-2 text-xs font-mono bg-[#0b101b] border border-slate-800 px-3 py-1.5 rounded-lg">
             <span className="text-slate-400">{activeSession.name}</span>
@@ -322,13 +322,13 @@ export default function App() {
                 const isSelected = selectedAsset.symbol === asset.symbol;
                 const assetIsLong = asset.bias === 'LONG';
                 return (
-                  <div key={asset.symbol} onClick={() => setSelectedAsset(asset)} className={p-3 rounded-lg border cursor-pointer transition flex justify-between items-center }>
+                  <div key={asset.symbol} onClick={() => setSelectedAsset(asset)} className={`p-3 rounded-lg border cursor-pointer transition flex justify-between items-center ${isSelected ? 'bg-slate-800/90 border-emerald-500/80 shadow' : 'bg-[#0d1322]/70 border-slate-800 hover:border-slate-700 text-slate-300'}`}>
                     <div>
                       <div className="font-bold text-sm text-white flex items-center gap-1.5">{asset.symbol} <span className="text-xs text-slate-400 font-normal">({asset.name})</span></div>
-                      <div className="text-xs font-mono text-emerald-400 font-bold mt-0.5"></div>
+                      <div className="text-xs font-mono text-emerald-400 font-bold mt-0.5">${formatPrice(p)}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className={	ext-[10px] px-2 py-0.5 rounded font-mono font-bold border }>{asset.bias}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${assetIsLong ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>{asset.bias}</span>
                       <button onClick={(e) => { e.stopPropagation(); setSelectedAsset(asset); setActiveTab('chart'); }} className="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-xs px-3 py-1 rounded font-mono transition">Chart</button>
                     </div>
                   </div>
@@ -346,13 +346,13 @@ export default function App() {
                       <span className="text-xs text-slate-400 font-mono block">BI-DIRECTIONAL STRUCTURE SETUP:</span>
                       <span className="text-sm font-bold text-white flex items-center gap-2 mt-0.5">
                         {selectedAsset.name} ({selectedAsset.symbol})
-                        <span className={	ext-[10px] px-2 py-0.5 rounded font-mono font-bold border }>{activeStructure.status}</span>
+                        <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${isLong ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-rose-500/20 text-rose-300 border-rose-500/40'}`}>{activeStructure.status}</span>
                       </span>
                     </div>
                     <div className="flex items-center gap-2 font-mono text-xs">
-                      <div className="bg-[#0d1322] px-2.5 py-1.5 rounded-lg border border-cyan-500/40"><span className="text-slate-400 text-[10px] block">LOCKED ENTRY</span><span className="text-cyan-300 font-bold text-sm"></span></div>
-                      <div className="bg-rose-500/10 px-2.5 py-1.5 rounded-lg border border-rose-500/40"><span className="text-rose-400 text-[10px] block">STOP LOSS</span><span className="text-rose-300 font-bold text-sm"></span></div>
-                      <div className="bg-emerald-500/10 px-2.5 py-1.5 rounded-lg border border-emerald-500/40"><span className="text-emerald-400 text-[10px] block">TARGET (1:3 RR)</span><span className="text-emerald-300 font-bold text-sm"></span></div>
+                      <div className="bg-[#0d1322] px-2.5 py-1.5 rounded-lg border border-cyan-500/40"><span className="text-slate-400 text-[10px] block">LOCKED ENTRY</span><span className="text-cyan-300 font-bold text-sm">${formatPrice(activeStructure.entry)}</span></div>
+                      <div className="bg-rose-500/10 px-2.5 py-1.5 rounded-lg border border-rose-500/40"><span className="text-rose-400 text-[10px] block">STOP LOSS</span><span className="text-rose-300 font-bold text-sm">${formatPrice(activeStructure.sl)}</span></div>
+                      <div className="bg-emerald-500/10 px-2.5 py-1.5 rounded-lg border border-emerald-500/40"><span className="text-emerald-400 text-[10px] block">TARGET (1:3 RR)</span><span className="text-emerald-300 font-bold text-sm">${formatPrice(activeStructure.tp)}</span></div>
                     </div>
                   </div>
                   <div className="bg-[#0d1322] p-3 rounded-lg border border-slate-800/80 space-y-2 text-xs">
@@ -371,7 +371,7 @@ export default function App() {
                   </div>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {currentNewsList.map(news => (
-                      <div key={news.id} onClick={() => setSelectedNews(news)} className={p-3 rounded-lg border cursor-pointer transition text-xs font-mono }>
+                      <div key={news.id} onClick={() => setSelectedNews(news)} className={`p-3 rounded-lg border cursor-pointer transition text-xs font-mono ${selectedNews.id === news.id ? 'bg-rose-500/15 border-rose-500 text-white shadow' : 'bg-[#0d1322] border-slate-800 text-slate-400 hover:border-slate-700'}`}>
                         <div className="flex justify-between items-center mb-1"><span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.5 rounded text-[9px] font-bold">{news.impact} IMPACT</span><span className="text-[10px] text-slate-400">{news.time}</span></div>
                         <div className="font-bold text-xs text-slate-200 mt-1">{news.event}</div>
                         <div className="text-[10px] text-slate-500 mt-2 flex justify-between"><span>Forecast: {news.forecast}</span><span>Previous: {news.previous}</span></div>
@@ -395,17 +395,17 @@ export default function App() {
                   <div className="flex justify-between items-center border-b border-slate-800 pb-2"><span className="text-xs font-bold text-cyan-400 font-mono tracking-wider uppercase">DELTA INDIA OPTION SELLING ENGINE ({optionAsset.symbol})</span><span className="text-[10px] text-slate-400 font-mono">Daily Expiry</span></div>
                   <div className="grid grid-cols-2 gap-2">
                     {[{ id: 'STRANGLE', name: 'Short Strangle', badge: 'Max Theta Decay' }, { id: 'CONDOR', name: 'Iron Condor', badge: 'Protected Wings' }].map(strat => (
-                      <div key={strat.id} onClick={() => setOptionStrat(strat.id)} className={p-3 rounded-lg border cursor-pointer transition text-xs font-mono }>
+                      <div key={strat.id} onClick={() => setOptionStrat(strat.id)} className={`p-3 rounded-lg border cursor-pointer transition text-xs font-mono ${optionStrat === strat.id ? 'bg-cyan-500/15 border-cyan-500/80 text-white shadow' : 'bg-[#0d1322] border-slate-800 text-slate-400 hover:border-slate-700'}`}>
                         <div className="font-bold text-white">{strat.name}</div>
                         <div className="text-[10px] text-cyan-400 mt-1">{strat.badge}</div>
                       </div>
                     ))}
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono pt-1">
-                    <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800"><span className="text-[10px] text-slate-500 block">MAX PROFIT</span><span className="text-emerald-400 font-bold text-sm">+</span></div>
+                    <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800"><span className="text-[10px] text-slate-500 block">MAX PROFIT</span><span className="text-emerald-400 font-bold text-sm">+${currentOption.netCredit}</span></div>
                     <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800"><span className="text-[10px] text-slate-500 block">WIN RATE</span><span className="text-cyan-300 font-bold text-sm">{currentOption.pop}</span></div>
-                    <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800"><span className="text-[10px] text-slate-500 block">LOWER BREAKEVEN</span><span className="text-rose-400 font-bold text-sm"></span></div>
-                    <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800"><span className="text-[10px] text-slate-500 block">UPPER BREAKEVEN</span><span className="text-rose-400 font-bold text-sm"></span></div>
+                    <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800"><span className="text-[10px] text-slate-500 block">LOWER BREAKEVEN</span><span className="text-rose-400 font-bold text-sm">${currentOption.lowerBreakeven.toFixed(0)}</span></div>
+                    <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800"><span className="text-[10px] text-slate-500 block">UPPER BREAKEVEN</span><span className="text-rose-400 font-bold text-sm">${currentOption.upperBreakeven.toFixed(0)}</span></div>
                   </div>
                 </div>
                 <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-2">
@@ -416,10 +416,10 @@ export default function App() {
                       <tbody className="divide-y divide-slate-800/60">
                         {currentOption.legs.map((leg, idx) => (
                           <tr key={idx}>
-                            <td className="py-2"><span className={px-2 py-0.5 rounded text-[10px] font-bold }>{leg.action}</span></td>
-                            <td className="py-2 text-white font-bold"></td>
+                            <td className="py-2"><span className={`px-2 py-0.5 rounded text-[10px] font-bold ${leg.action === 'SELL' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}`}>{leg.action}</span></td>
+                            <td className="py-2 text-white font-bold">${leg.strike}</td>
                             <td className="py-2 text-slate-300">{leg.type}</td>
-                            <td className="py-2 text-emerald-400 font-bold"></td>
+                            <td className="py-2 text-emerald-400 font-bold">${leg.premium * contractQty}</td>
                           </tr>
                         ))}
                       </tbody>
@@ -430,7 +430,7 @@ export default function App() {
             )}
 
             <div className="p-3.5 rounded-xl bg-gradient-to-r from-indigo-600/10 via-[#0d1322] to-transparent border border-indigo-500/30 flex justify-between items-center">
-              <div><span className="text-xs text-white font-bold block">Ready to View Technical Candlesticks?</span><span className="text-[11px] text-slate-400">Current selection: {selectedAsset.name} ()</span></div>
+              <div><span className="text-xs text-white font-bold block">Ready to View Technical Candlesticks?</span><span className="text-[11px] text-slate-400">Current selection: {selectedAsset.name} (${formatPrice(cmp)})</span></div>
               <button onClick={() => setActiveTab('chart')} className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold font-mono transition">Launch Chart →</button>
             </div>
           </div>
@@ -445,13 +445,13 @@ export default function App() {
               <div className="flex items-center gap-2"><span className="text-sm font-black text-white">{selectedAsset.symbol}</span><span className="text-xs text-slate-400">({selectedAsset.name})</span></div>
             </div>
             <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
-              <div className="bg-[#0d1322] px-3 py-1.5 rounded-lg border border-cyan-500/40"><span className="text-slate-400 text-[10px]">ENTRY: </span><span className="text-cyan-300 font-bold"></span></div>
-              <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40"><span className="text-slate-400 text-[10px]">SL: </span><span className="text-rose-300 font-bold"></span></div>
-              <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40"><span className="text-slate-400 text-[10px]">TP: </span><span className="text-emerald-300 font-bold"></span></div>
+              <div className="bg-[#0d1322] px-3 py-1.5 rounded-lg border border-cyan-500/40"><span className="text-slate-400 text-[10px]">ENTRY: </span><span className="text-cyan-300 font-bold">${formatPrice(activeStructure.entry)}</span></div>
+              <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40"><span className="text-slate-400 text-[10px]">SL: </span><span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span></div>
+              <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40"><span className="text-slate-400 text-[10px]">TP: </span><span className="text-emerald-300 font-bold">${formatPrice(activeStructure.tp)}</span></div>
             </div>
           </div>
           <div className="w-full h-[650px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
-            <iframe key={selectedAsset.tvSymbol} title="TradingView Pro Chart" className="w-full h-full border-0" src={https://s.tradingview.com/widgetembed/?symbol=&interval=5&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&hide_side_toolbar=0&allow_symbol_change=1&save_image=0} />
+            <iframe key={selectedAsset.tvSymbol} title="TradingView Pro Chart" className="w-full h-full border-0" src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(selectedAsset.tvSymbol)}&interval=5&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&hide_side_toolbar=0&allow_symbol_change=1&save_image=0`} />
           </div>
         </div>
       )}
