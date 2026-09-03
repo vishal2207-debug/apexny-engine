@@ -9,6 +9,45 @@ const ASSETS = [
   { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 42.50 },
 ];
 
+const GLOBAL_NEWS_DATA = [
+  {
+    id: 1,
+    event: 'US Core CPI (YoY)',
+    impact: 'HIGH',
+    currency: 'USD',
+    time: '18:00 IST',
+    forecast: '2.8%',
+    previous: '2.9%',
+    status: 'High Volatility Expected',
+    scenarioBullish: 'Actual < Forecast: DXY Dump -> Massive Pump on Gold, BTC & Risk Assets (Long Bias).',
+    scenarioBearish: 'Actual > Forecast: DXY Spike -> Sharp Liquidation on BTC & Gold (Short Bias).'
+  },
+  {
+    id: 2,
+    event: 'Federal Reserve Interest Rate Decision (FOMC)',
+    impact: 'HIGH',
+    currency: 'USD',
+    time: '23:30 IST',
+    forecast: '4.75%',
+    previous: '5.00%',
+    status: 'Institutional Manipulation Spike',
+    scenarioBullish: 'Dovish Rate Cut (-25bps / -50bps): Weak Dollar liquidity expands crypto and commodities.',
+    scenarioBearish: 'Hawkish Pause / Stance: Yields surge, sudden sweeps of Asian & London session lows.'
+  },
+  {
+    id: 3,
+    event: 'US Non-Farm Payrolls (NFP) & Unemployment',
+    impact: 'HIGH',
+    currency: 'USD',
+    time: '18:00 IST (First Friday)',
+    forecast: '145K',
+    previous: '160K',
+    status: 'Initial Liquidity Grab Zone',
+    scenarioBullish: 'Weaker Job Data: Confirms economic cooldown, instant short-squeeze on Gold & ETH.',
+    scenarioBearish: 'Hot Job Print: Heavy dollar demand, equal highs act as liquidity traps.'
+  }
+];
+
 export default function App() {
   const [prices, setPrices] = useState({});
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[4]);
@@ -16,8 +55,9 @@ export default function App() {
   const [timeUTC, setTimeUTC] = useState('');
   const [activeSession, setActiveSession] = useState({ name: '24H GLOBAL', color: 'emerald' });
   const [accountSize, setAccountSize] = useState(10000);
+  const [selectedNews, setSelectedNews] = useState(GLOBAL_NEWS_DATA[0]);
 
-  // Live prices
+  // Live prices feed
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -44,7 +84,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // 24-Hour Continuous Global Session Tracker (UTC)
+  // 24H Session Tracker
   useEffect(() => {
     const track24hSessions = () => {
       const now = new Date();
@@ -52,7 +92,6 @@ export default function App() {
       const utcMinutes = now.getUTCMinutes();
       const timeVal = utcHours + utcMinutes / 60;
 
-      // Asian: 00:00 - 08:00 UTC | London: 07:00 - 16:00 UTC | New York: 13:00 - 22:00 UTC
       let sessionName = 'ASIAN SESSION';
       let badgeColor = 'cyan';
 
@@ -79,7 +118,7 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
-  // 24-Hour Bi-Directional SMC Engine (Active Day & Night)
+  // Bi-Directional 24H SMC Engine
   useEffect(() => {
     const run24hSMCEngine = () => {
       const currentCMP = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
@@ -157,7 +196,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#05070b] text-slate-200 p-3 md:p-5 font-sans selection:bg-emerald-500 selection:text-black">
-      {/* 24-Hour Multi-Session Global Header */}
+      {/* Header */}
       <header className="flex flex-wrap items-center justify-between pb-4 mb-4 border-b border-slate-800/80 gap-3">
         <div className="flex items-center space-x-3">
           <div className="relative flex items-center justify-center">
@@ -169,7 +208,7 @@ export default function App() {
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
                 APEX<span className={isLong ? "text-emerald-400" : "text-rose-400"}>PRO</span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                  24/7 GLOBAL ENGINE
+                  MACRO ENGINE v5.0
                 </span>
               </h1>
             </div>
@@ -178,12 +217,11 @@ export default function App() {
                 Proprietary Architecture by Mr. Vishal Langade
               </span>
               <span>•</span>
-              <span>Continuous 24-Hour Asian, London & NY Cycles</span>
+              <span>24/7 SMC Cycles & High-Impact Macro Feed</span>
             </div>
           </div>
         </div>
 
-        {/* 24H Global Sessions HUD */}
         <div className="flex items-center gap-2 md:gap-3 flex-wrap text-xs font-mono">
           <div className="bg-[#0b101b] border border-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-sm">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -277,8 +315,9 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Right Column: 24-Hour Cockpit */}
+        {/* Right Column */}
         <main className="lg:col-span-3 flex flex-col space-y-3">
+          {/* Target Numbers HUD */}
           <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 shadow-lg">
             <div className="flex items-center space-x-2.5">
               <div className={`px-2.5 py-1 rounded text-black font-black text-xs font-mono tracking-wider shadow ${
@@ -295,12 +334,11 @@ export default function App() {
                 </div>
                 <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                   CMP: <span className="text-emerald-400 font-bold">${formatPrice(currentCMP)}</span>
-                  <span className="ml-2 text-slate-500">• Structure Level: {activeStructure.timestamp}</span>
+                  <span className="ml-2 text-slate-500">• Structure: {activeStructure.timestamp}</span>
                 </div>
               </div>
             </div>
 
-            {/* Dynamic 24-Hour Levels */}
             <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
               <div className="bg-[#0d1322] px-3 py-1.5 rounded-lg border border-cyan-500/40 shadow">
                 <span className="text-slate-400 text-[10px] block">{isLong ? 'DISCOUNT ENTRY' : 'PREMIUM ENTRY'}</span>
@@ -308,7 +346,7 @@ export default function App() {
               </div>
 
               <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40 shadow">
-                <span className="text-rose-400 text-[10px] block">STOP LOSS ({isLong ? 'BELOW LOW' : 'ABOVE HIGH'})</span>
+                <span className="text-rose-400 text-[10px] block">STOP LOSS ({isLong ? 'SWING LOW' : 'SWING HIGH'})</span>
                 <span className="text-rose-300 font-bold text-sm">${formatPrice(activeStructure.sl)}</span>
               </div>
 
@@ -327,8 +365,74 @@ export default function App() {
             </div>
           </div>
 
-          {/* Full Advanced TradingView Chart Frame */}
-          <div className="w-full flex-grow h-[580px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
+          {/* New Global High-Impact News & Scenario Matrix */}
+          <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 shadow-lg space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <div className="flex items-center space-x-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse" />
+                <span className="text-xs font-bold text-white uppercase tracking-wider font-mono">
+                  GLOBAL MACRO NEWS & IMPACT SCENARIOS
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-slate-400">Institutional Catalyst Tracker</span>
+            </div>
+
+            {/* News Tabs */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+              {GLOBAL_NEWS_DATA.map(news => {
+                const isCurrent = selectedNews.id === news.id;
+                return (
+                  <div
+                    key={news.id}
+                    onClick={() => setSelectedNews(news)}
+                    className={`p-2.5 rounded-lg border cursor-pointer transition text-xs font-mono ${
+                      isCurrent
+                        ? 'bg-rose-500/15 border-rose-500/60 text-white shadow-md'
+                        : 'bg-[#0d1322] border-slate-800 hover:border-slate-700 text-slate-400'
+                    }`}
+                  >
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="bg-rose-500/20 text-rose-400 border border-rose-500/30 px-1.5 py-0.2 rounded text-[9px] font-bold">
+                        {news.impact} IMPACT
+                      </span>
+                      <span className="text-[10px] text-slate-400">{news.time}</span>
+                    </div>
+                    <div className="font-bold text-[11px] text-slate-200 truncate">{news.event}</div>
+                    <div className="text-[10px] text-slate-500 mt-1 flex justify-between">
+                      <span>Exp: {news.forecast}</span>
+                      <span>Prev: {news.previous}</span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Selected Scenario Breakdown Card */}
+            <div className="bg-[#0d1322] p-3 rounded-lg border border-slate-800/90 text-xs space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="font-bold text-white flex items-center gap-1.5">
+                  <span className="text-cyan-400">? Execution Scenarios:</span> {selectedNews.event}
+                </span>
+                <span className="text-[10px] font-mono text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                  {selectedNews.status}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px] font-sans pt-1">
+                <div className="p-2 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
+                  <span className="font-bold block text-emerald-400 mb-0.5">?? Bullish Outcome Scenario:</span>
+                  {selectedNews.scenarioBullish}
+                </div>
+                <div className="p-2 rounded bg-rose-500/10 border border-rose-500/20 text-rose-300">
+                  <span className="font-bold block text-rose-400 mb-0.5">?? Bearish Outcome Scenario:</span>
+                  {selectedNews.scenarioBearish}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Clean Interactive TradingView Chart */}
+          <div className="w-full flex-grow h-[550px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
             <iframe
               key={selectedAsset.tvSymbol}
               title="TradingView Pro Chart"
@@ -341,7 +445,7 @@ export default function App() {
           <footer className="p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
             <div className="flex items-center gap-2 font-mono">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Global Protocol: 24-Hour Continuous Market Scanner Active</span>
+              <span>Global Macro Catalyst Protocol: Synchronized</span>
             </div>
             <div className="font-mono text-emerald-400 font-bold tracking-wide">
               Crafted with Precision by Mr. Vishal Langade
