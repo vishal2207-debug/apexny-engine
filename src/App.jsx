@@ -1,12 +1,72 @@
 import React, { useState, useEffect } from 'react';
 
 const ASSETS = [
-  { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto', basePrice: 80967 },
-  { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto', basePrice: 2501 },
-  { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto', basePrice: 104.5 },
-  { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto', basePrice: 1.45 },
-  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodities', basePrice: 4493.05 },
-  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 42.50 },
+  { 
+    symbol: 'BTCUSD', 
+    tvSymbol: 'BINANCE:BTCUSDT', 
+    name: 'Bitcoin', 
+    category: 'Crypto', 
+    basePrice: 80967,
+    setupType: 'BULLISH FVG + ASIA SWEEP',
+    sweepZone: '$80,420 (Asian Session Lows Swept)',
+    fvgZone: '$80,550 - $80,680 (5M Imbalance)',
+    confluence: 'Displacement above previous 15M High with heavy buy volume'
+  },
+  { 
+    symbol: 'ETHUSD', 
+    tvSymbol: 'BINANCE:ETHUSDT', 
+    name: 'Ethereum', 
+    category: 'Crypto', 
+    basePrice: 2501,
+    setupType: 'BULLISH ORDER BLOCK MITIGATION',
+    sweepZone: '$2,485 (Sell-Side Liquidity Collected)',
+    fvgZone: '$2,492 - $2,500 (Breaker Block Retest)',
+    confluence: 'Bullish MSS confirmed on 5M timeframe post London close'
+  },
+  { 
+    symbol: 'SOLUSD', 
+    tvSymbol: 'BINANCE:SOLUSDT', 
+    name: 'Solana', 
+    category: 'Crypto', 
+    basePrice: 104.5,
+    setupType: 'DISCOUNT EXPANSION',
+    sweepZone: '$102.80 (Equal Lows Cleared)',
+    fvgZone: '$103.50 - $104.10 (Fair Value Gap Fill)',
+    confluence: 'Rejection of 0.62 OTE Fibonacci zone'
+  },
+  { 
+    symbol: 'XRPUSD', 
+    tvSymbol: 'BINANCE:XRPUSDT', 
+    name: 'Ripple', 
+    category: 'Crypto', 
+    basePrice: 1.45,
+    setupType: 'RANGE LOW SWEEP',
+    sweepZone: '$1.422 (London Low Taken)',
+    fvgZone: '$1.435 - $1.442 (Rebalance Zone)',
+    confluence: 'High relative volume inside New York session'
+  },
+  { 
+    symbol: 'XAUUSD', 
+    tvSymbol: 'OANDA:XAUUSD', 
+    name: 'Gold Spot', 
+    category: 'Commodities', 
+    basePrice: 4493.05,
+    setupType: 'NY KILLZONE EXPANSION',
+    sweepZone: '$4,472.50 (London Open Lows Swept)',
+    fvgZone: '$4,482.00 - $4,488.50 (5M Unfilled FVG)',
+    confluence: 'Institutional displacement pushing into Premium targets'
+  },
+  { 
+    symbol: 'XAGUSD', 
+    tvSymbol: 'OANDA:XAGUSD', 
+    name: 'Silver Spot', 
+    category: 'Commodities', 
+    basePrice: 42.50,
+    setupType: 'SMT DIVERGENCE + FVG',
+    sweepZone: '$41.80 (Key Support Tap)',
+    fvgZone: '$42.10 - $42.35 (Mitigation Area)',
+    confluence: 'Gold made higher-low while Silver swept low (SMT confirmation)'
+  },
 ];
 
 export default function App() {
@@ -67,7 +127,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#05070b] text-slate-200 p-3 md:p-5 font-sans selection:bg-emerald-500 selection:text-black">
-      {/* Top Pro Terminal Header */}
+      {/* Top Header */}
       <header className="flex flex-wrap items-center justify-between pb-4 mb-4 border-b border-slate-800/80 gap-3">
         <div className="flex items-center space-x-3">
           <div className="relative flex items-center justify-center">
@@ -79,7 +139,7 @@ export default function App() {
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
                 APEX<span className="text-emerald-400">NY</span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-                  TERMINAL v4.2
+                  ENGINE PRO
                 </span>
               </h1>
             </div>
@@ -88,12 +148,11 @@ export default function App() {
                 Proprietary Architecture by Mr. Vishal Langade
               </span>
               <span>•</span>
-              <span>ICT / SMC Pure Price Action</span>
+              <span>Live SMC Execution Feed</span>
             </div>
           </div>
         </div>
 
-        {/* Live Session & Clock HUD */}
         <div className="flex items-center gap-2 md:gap-3 flex-wrap text-xs font-mono">
           <div className="bg-[#0b101b] border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-sm shadow-emerald-500/5">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -110,9 +169,9 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Grid: Watchlist + Live Cockpit */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Left Column */}
+        {/* Left Column: Watchlist & Risk */}
         <aside className="space-y-4">
           <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 shadow-xl">
             <div className="flex items-center justify-between mb-3 px-1">
@@ -158,33 +217,29 @@ export default function App() {
             </div>
           </div>
 
+          {/* Risk HUD */}
           <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 space-y-3 shadow-xl">
             <div className="flex justify-between items-center px-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">RISK MANAGEMENT</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">RISK PROTOCOL</span>
               <span className="text-[10px] font-mono text-cyan-400">1:3 FIXED RR</span>
             </div>
 
             <div className="grid grid-cols-2 gap-2 text-xs font-mono">
               <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">RISK ($)</span>
+                <span className="text-slate-500 text-[10px] block">MAX RISK ($)</span>
                 <span className="text-rose-400 font-bold text-sm">-${riskAmount}</span>
               </div>
               <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800">
-                <span className="text-slate-500 text-[10px] block">TARGET ($)</span>
+                <span className="text-slate-500 text-[10px] block">TARGET PROFIT ($)</span>
                 <span className="text-emerald-400 font-bold text-sm">+${rewardAmount}</span>
               </div>
-            </div>
-
-            <div className="p-2.5 bg-[#0d1322] rounded-lg border border-slate-800/70 text-[11px] text-slate-300 leading-relaxed">
-              <span className="text-emerald-400 font-bold block mb-1">ICT Killzone Playbook:</span>
-              Targeting Buy-Side Liquidity after London Lows Sweep. Entry calibrated on 5M FVG retest around ${formatPrice(entryVal)}.
             </div>
           </div>
         </aside>
 
-        {/* Right Column: Clean Chart Cockpit */}
+        {/* Right Column: Chart + Live Execution Logic Panel */}
         <main className="lg:col-span-3 flex flex-col space-y-3">
-          {/* Top Live Numbers Bar */}
+          {/* Target Numbers HUD */}
           <div className="bg-[#090d16] p-3 rounded-xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 shadow-lg">
             <div className="flex items-center space-x-2.5">
               <div className="px-2.5 py-1 rounded bg-emerald-500 text-black font-black text-xs font-mono tracking-wider shadow">
@@ -192,7 +247,7 @@ export default function App() {
               </div>
               <div>
                 <span className="text-sm font-black text-white">{selectedAsset.symbol}</span>
-                <span className="text-xs text-slate-400 ml-1.5">5M Institutional Chart</span>
+                <span className="text-xs text-slate-400 ml-1.5">5M Killzone Chart</span>
               </div>
             </div>
 
@@ -215,8 +270,42 @@ export default function App() {
             </div>
           </div>
 
-          {/* Clean Interactive TradingView Chart */}
-          <div className="w-full flex-grow h-[600px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
+          {/* New: Dedicated SMC/ICT Entry Logic HUD (Explaining the WHY) */}
+          <div className="bg-gradient-to-r from-[#0d1424] via-[#090d16] to-[#0d1424] p-3 rounded-xl border border-cyan-500/30 shadow-md space-y-2">
+            <div className="flex items-center justify-between border-b border-slate-800/80 pb-2">
+              <div className="flex items-center space-x-2">
+                <span className="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 text-[10px] font-bold font-mono">
+                  SMC CONFLUENCE
+                </span>
+                <span className="text-xs font-bold text-white tracking-wide">
+                  WHY TAKE LONG ENTRY ON {selectedAsset.symbol}?
+                </span>
+              </div>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                Setup: {selectedAsset.setupType}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 text-xs font-mono pt-1">
+              <div className="bg-[#05070b]/60 p-2 rounded-lg border border-slate-800">
+                <span className="text-[10px] text-slate-400 block font-sans">1. Liquidity Run (SSL):</span>
+                <span className="text-amber-400 font-semibold">{selectedAsset.sweepZone}</span>
+              </div>
+
+              <div className="bg-[#05070b]/60 p-2 rounded-lg border border-slate-800">
+                <span className="text-[10px] text-slate-400 block font-sans">2. Imbalance Mitigated (FVG):</span>
+                <span className="text-cyan-400 font-semibold">{selectedAsset.fvgZone}</span>
+              </div>
+
+              <div className="bg-[#05070b]/60 p-2 rounded-lg border border-slate-800">
+                <span className="text-[10px] text-slate-400 block font-sans">3. Structure Shift (MSS):</span>
+                <span className="text-emerald-400 font-semibold">{selectedAsset.confluence}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Chart Frame */}
+          <div className="w-full flex-grow h-[550px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
             <iframe
               key={selectedAsset.tvSymbol}
               title="TradingView Pro Chart"
@@ -225,10 +314,11 @@ export default function App() {
             />
           </div>
 
+          {/* Footer */}
           <footer className="p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
             <div className="flex items-center gap-2 font-mono">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Algorithmic Feed: Synced with OANDA Spot</span>
+              <span>Institutional Algorithm: Active</span>
             </div>
             <div className="font-mono text-emerald-400 font-bold tracking-wide">
               Crafted with Precision by Mr. Vishal Langade
