@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
 const ASSETS = [
-  { symbol: 'BTCUSD', name: 'Bitcoin', category: 'Crypto', basePrice: 80967, setupType: 'BULLISH FVG + ASIA SWEEP' },
-  { symbol: 'ETHUSD', name: 'Ethereum', category: 'Crypto', basePrice: 2501, setupType: 'ORDER BLOCK MITIGATION' },
-  { symbol: 'SOLUSD', name: 'Solana', category: 'Crypto', basePrice: 104.5, setupType: 'DISCOUNT EXPANSION' },
-  { symbol: 'XRPUSD', name: 'Ripple', category: 'Crypto', basePrice: 1.45, setupType: 'RANGE LOW SWEEP' },
-  { symbol: 'XAUUSD', name: 'Gold Spot', category: 'Commodities', basePrice: 4493.05, setupType: 'NY KILLZONE EXPANSION' },
-  { symbol: 'XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 42.50, setupType: 'SMT DIVERGENCE' },
+  { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto', basePrice: 80967 },
+  { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto', basePrice: 2501 },
+  { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto', basePrice: 104.5 },
+  { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto', basePrice: 1.45 },
+  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodities', basePrice: 2742.50 },
+  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 32.20 },
 ];
 
 export default function App() {
   const [prices, setPrices] = useState({});
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
   const [timeUTC, setTimeUTC] = useState('');
+  const [inKillzone, setInKillzone] = useState(false);
   const [accountSize, setAccountSize] = useState(10000);
 
+  // Live prices from Delta Exchange
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -28,8 +30,8 @@ export default function App() {
                 change: parseFloat(t.change_24h || 0).toFixed(2),
               };
             });
-            priceMap['XAUUSD'] = { price: 4493.05, change: '0.69' };
-            priceMap['XAGUSD'] = { price: 42.50, change: '1.20' };
+            priceMap['XAUUSD'] = { price: 2742.80, change: '0.65' };
+            priceMap['XAGUSD'] = { price: 32.18, change: '1.02' };
             setPrices(prev => ({ ...prev, ...priceMap }));
           }
         })
@@ -41,19 +43,26 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Live NY Session Check
   useEffect(() => {
-    const updateTime = () => {
+    const checkNY = () => {
       const now = new Date();
+      const utcHours = now.getUTCHours();
+      const utcMinutes = now.getUTCMinutes();
+      const timeVal = utcHours + utcMinutes / 60;
+      setInKillzone(timeVal >= 13.5 && timeVal <= 20.0);
       setTimeUTC(now.toUTCString().split(' ')[4] + ' UTC');
     };
-    updateTime();
-    const timer = setInterval(updateTime, 1000);
+
+    checkNY();
+    const timer = setInterval(checkNY, 1000);
     return () => clearInterval(timer);
   }, []);
 
   const activePrice = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
   const isCryptoSmall = activePrice < 10;
 
+  // Dynamic 1:3 RR Levels
   const entryVal = activePrice;
   const slVal = activePrice * 0.995;
   const tpVal = activePrice * 1.015;
@@ -64,10 +73,6 @@ export default function App() {
     if (!val) return '0.00';
     return isCryptoSmall ? Number(val).toFixed(4) : Number(val).toFixed(2);
   };
-
-  // Construct official Delta Exchange India TradingView embed URL
-  const deltaSymbol = selectedAsset.symbol;
-  const deltaChartUrl = `https://cdn.india.delta.exchange/charting_library/index.html?symbol=${deltaSymbol}&interval=5&theme=dark&locale=en`;
 
   return (
     <div className="min-h-screen bg-[#05070b] text-slate-200 p-3 md:p-5 font-sans selection:bg-emerald-500 selection:text-black">
@@ -83,7 +88,7 @@ export default function App() {
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
                 APEX<span className="text-emerald-400">NY</span>
                 <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-                  DELTA INDIA FEED
+                  TRADINGVIEW PRO
                 </span>
               </h1>
             </div>
@@ -92,15 +97,19 @@ export default function App() {
                 Proprietary Architecture by Mr. Vishal Langade
               </span>
               <span>•</span>
-              <span>Direct Delta Exchange India Chart Engine</span>
+              <span>SMC & ICT Algorithmic Execution</span>
             </div>
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3 flex-wrap text-xs font-mono">
-          <div className="bg-[#0b101b] border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-sm shadow-emerald-500/5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span className="text-emerald-300 font-bold">NY Killzone: ACTIVE</span>
+          <div className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border ${
+            inKillzone 
+              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 font-semibold' 
+              : 'bg-gray-800/60 border-gray-700 text-gray-400'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${inKillzone ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
+            <span>{inKillzone ? 'NY Killzone: ACTIVE' : 'Outside NY Killzone'}</span>
           </div>
 
           <div className="bg-[#0b101b] border border-slate-800 px-3 py-1.5 rounded-lg text-slate-300">
@@ -113,14 +122,14 @@ export default function App() {
         </div>
       </header>
 
-      {/* Main Layout */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Watchlist */}
+        {/* Left Column: Watchlist & Risk */}
         <aside className="space-y-4">
           <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 shadow-xl">
             <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">DELTA ASSETS</span>
-              <span className="text-[10px] text-emerald-400 font-mono">Native Stream</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">MARKET ASSETS</span>
+              <span className="text-[10px] text-emerald-400 font-mono">Live Stream</span>
             </div>
 
             <div className="space-y-2">
@@ -161,6 +170,7 @@ export default function App() {
             </div>
           </div>
 
+          {/* Risk Protocol */}
           <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 space-y-3 shadow-xl">
             <div className="flex justify-between items-center px-1">
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">RISK PROTOCOL</span>
@@ -180,7 +190,7 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Chart View */}
+        {/* Right Column: TradingView Advanced Chart Cockpit */}
         <main className="lg:col-span-3 flex flex-col space-y-3">
           {/* Target Numbers HUD */}
           <div className="bg-[#090d16] p-3 rounded-xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 shadow-lg">
@@ -190,7 +200,7 @@ export default function App() {
               </div>
               <div>
                 <span className="text-sm font-black text-white">{selectedAsset.symbol}</span>
-                <span className="text-xs text-slate-400 ml-1.5">Delta Exchange India 5M Chart</span>
+                <span className="text-xs text-slate-400 ml-1.5">{selectedAsset.name} • 5M Resolution</span>
               </div>
             </div>
 
@@ -213,13 +223,13 @@ export default function App() {
             </div>
           </div>
 
-          {/* Delta Exchange India Native Chart Frame */}
+          {/* Full Advanced TradingView Chart Frame with All Drawing Tools */}
           <div className="w-full flex-grow h-[600px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
             <iframe
-              key={selectedAsset.symbol}
-              title="Delta Exchange India Chart"
+              key={selectedAsset.tvSymbol}
+              title="TradingView Pro Chart"
               className="w-full h-full border-0"
-              src={deltaChartUrl}
+              src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(selectedAsset.tvSymbol)}&interval=5&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&hide_side_toolbar=0&allow_symbol_change=1&save_image=0`}
             />
           </div>
 
@@ -227,7 +237,7 @@ export default function App() {
           <footer className="p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
             <div className="flex items-center gap-2 font-mono">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Exchange Feed: Delta Exchange India (Official CDN)</span>
+              <span>Advanced Engine: TradingView Pro Native Stream</span>
             </div>
             <div className="font-mono text-emerald-400 font-bold tracking-wide">
               Crafted with Precision by Mr. Vishal Langade
