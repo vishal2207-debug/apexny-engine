@@ -231,13 +231,12 @@ export default function App() {
         <div className="flex items-center space-x-3">
           <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
           <div className="flex items-center gap-2">
-            {/* Waving Indian Flag Emoji with subtle wave animation */}
-            <span className="text-2xl animate-bounce inline-block" title="Proudly Indian">????</span>
+            <span className="text-2xl animate-pulse inline-block">????</span>
             <div>
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
                 APEX<span className="text-emerald-400">PRO</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                  TERMINAL v6.0
+                  TERMINAL v6.1
                 </span>
               </h1>
               <p className="text-[11px] text-emerald-400 font-mono">By Mr. Vishal Langade • Proudly Indian ????</p>
@@ -567,7 +566,7 @@ export default function App() {
                 <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
               </div>
               <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
-                <span className="text-emerald-400 text-[10px]">TP: </span>
+                <span className="text-slate-400 text-[10px]">TP: </span>
                 <span className="text-emerald-300 font-bold">${formatPrice(activeStructure.tp)}</span>
               </div>
             </div>
