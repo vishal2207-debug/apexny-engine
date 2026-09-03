@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 
 const ALL_ASSETS = [
   { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto', basePrice: 80967.50, strikeStep: 1000, hasOptions: true, newsType: 'CRYPTO' },
@@ -231,15 +231,15 @@ export default function App() {
         <div className="flex items-center space-x-3">
           <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
           <div className="flex items-center gap-2">
-            <span className="text-2xl animate-pulse inline-block">????</span>
+            <span className="text-2xl animate-pulse inline-block">{"\u{1F1EE}\u{1F1F3}"}</span>
             <div>
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
                 APEX<span className="text-emerald-400">PRO</span>
                 <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                  TERMINAL v6.1
+                  TERMINAL v6.2
                 </span>
               </h1>
-              <p className="text-[11px] text-emerald-400 font-mono">By Mr. Vishal Langade � Proudly Indian ????</p>
+              <p className="text-[11px] text-emerald-400 font-mono">By Mr. Vishal Langade • Proudly Indian {"\u{1F1EE}\u{1F1F3}"}</p>
             </div>
           </div>
         </div>
@@ -344,7 +344,7 @@ export default function App() {
                         }}
                         className="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-xs px-3 py-1 rounded font-mono transition"
                       >
-                        Chart ?
+                        Chart
                       </button>
                     </div>
                   </div>
@@ -532,7 +532,7 @@ export default function App() {
                 onClick={() => setActiveTab('chart')}
                 className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-lg text-xs font-bold font-mono transition"
               >
-                Launch Chart ?
+                Launch Chart →
               </button>
             </div>
           </div>
@@ -548,7 +548,7 @@ export default function App() {
                 onClick={() => setActiveTab('dashboard')}
                 className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-lg text-xs font-mono font-bold transition flex items-center gap-1.5"
               >
-                ? Back to Dashboard
+                ← Back to Dashboard
               </button>
               <div className="flex items-center gap-2">
                 <span className="text-sm font-black text-white">{selectedAsset.symbol}</span>
@@ -566,7 +566,7 @@ export default function App() {
                 <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
               </div>
               <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
-                <span className="text-slate-400 text-[10px]">TP: </span>
+                <span className="text-emerald-400 text-[10px]">TP: </span>
                 <span className="text-emerald-300 font-bold">${formatPrice(activeStructure.tp)}</span>
               </div>
             </div>
@@ -587,7 +587,7 @@ export default function App() {
       <footer className="mt-4 p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
         <div className="flex items-center gap-2 font-mono">
           <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-          <span>Proudly Indian ???? � Designed by Mr. Vishal Langade</span>
+          <span>Proudly Indian {"\u{1F1EE}\u{1F1F3}"} • Designed by Mr. Vishal Langade</span>
         </div>
         <div className="font-mono text-emerald-400 font-bold">
           Crafted with Precision by Mr. Vishal Langade
