@@ -71,11 +71,9 @@ export default function App() {
   const [optionStrat, setOptionStrat] = useState('STRANGLE');
   const [contractQty, setContractQty] = useState(1);
 
-  // Filter news dynamically based on selected asset type (Crypto vs Commodity)
   const currentNewsList = ASSET_SPECIFIC_NEWS[selectedAsset.newsType] || ASSET_SPECIFIC_NEWS.CRYPTO;
   const [selectedNews, setSelectedNews] = useState(currentNewsList[0]);
 
-  // Update selected news when asset changes
   useEffect(() => {
     const list = ASSET_SPECIFIC_NEWS[selectedAsset.newsType] || ASSET_SPECIFIC_NEWS.CRYPTO;
     setSelectedNews(list[0]);
@@ -183,7 +181,6 @@ export default function App() {
   const isLong = activeStructure.bias === 'LONG';
   const formatPrice = (val) => isSmallAsset ? Number(val || 0).toFixed(4) : Number(val || 0).toFixed(2);
 
-  // Option Engine
   const optionAsset = selectedAsset.hasOptions ? selectedAsset : ALL_ASSETS[0];
   const optCMP = prices[optionAsset.symbol]?.price || optionAsset.basePrice;
   const optStep = optionAsset.strikeStep;
@@ -237,14 +234,13 @@ export default function App() {
             <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
               APEX<span className="text-emerald-400">PRO</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                TERMINAL v5.8
+                TERMINAL v5.9
               </span>
             </h1>
             <p className="text-[11px] text-emerald-400 font-mono">By Mr. Vishal Langade • SMC & Delta Options Architecture</p>
           </div>
         </div>
 
-        {/* Global Controls & Clean Mode Switcher (No ? marks) */}
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex bg-[#0d1322] p-1 rounded-lg border border-slate-800">
             <button
@@ -343,7 +339,7 @@ export default function App() {
                           setSelectedAsset(asset);
                           setActiveTab('chart');
                         }}
-                        className="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-xs px-2.5 py-1 rounded font-mono transition"
+                        className="bg-indigo-600/30 hover:bg-indigo-600 text-indigo-200 hover:text-white text-xs px-3 py-1 rounded font-mono transition"
                       >
                         Chart ?
                       </button>
@@ -358,7 +354,6 @@ export default function App() {
           <div className="lg:col-span-2 space-y-4">
             {terminalMode === 'SMC' && (
               <div className="space-y-4">
-                {/* Active Setup Bar */}
                 <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800 flex flex-wrap justify-between items-center gap-3">
                   <div>
                     <span className="text-xs text-slate-400 font-mono block">ACTIVE ASSET SETUP:</span>
@@ -380,7 +375,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* Asset-Specific Macro News Matrix */}
                 <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                     <div className="flex items-center space-x-2">
@@ -418,7 +412,6 @@ export default function App() {
                     ))}
                   </div>
 
-                  {/* Scenarios Display */}
                   <div className="bg-[#0d1322] p-3.5 rounded-lg border border-slate-800 text-xs space-y-2">
                     <div className="flex justify-between items-center">
                       <span className="font-bold text-white">Impact Analysis: {selectedNews.event}</span>
@@ -527,7 +520,6 @@ export default function App() {
               </div>
             )}
 
-            {/* Launch Chart Banner */}
             <div className="p-3.5 rounded-xl bg-gradient-to-r from-indigo-600/10 via-[#0d1322] to-transparent border border-indigo-500/30 flex justify-between items-center">
               <div>
                 <span className="text-xs text-white font-bold block">Ready to View Technical Candlesticks?</span>
@@ -592,7 +584,7 @@ export default function App() {
       <footer className="mt-4 p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
         <div className="flex items-center gap-2 font-mono">
           <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-          <span>Asset-Specific Filtering & Clean Terminal UI</span>
+          <span>Clean Terminal UI • Designed by Mr. Vishal Langade</span>
         </div>
         <div className="font-mono text-emerald-400 font-bold">
           Crafted with Precision by Mr. Vishal Langade
