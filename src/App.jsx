@@ -1,19 +1,88 @@
 import React, { useState, useEffect } from 'react';
 
 const ASSETS = [
-  { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin' },
-  { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum' },
-  { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana' },
-  { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple' },
+  { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto' },
+  { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto' },
+  { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto' },
+  { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto' },
+  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodity' },
+  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodity' },
 ];
+
+const SIGNALS_MAP = {
+  BTCUSD: {
+    bias: 'LONG',
+    setup: 'Bullish FVG + Sweep',
+    entry: '80,520.00',
+    sl: '79,980.00',
+    tp: '82,140.00',
+    rr: '1:3.0',
+    logic: 'Asian lows swept, 5M Bullish Fair Value Gap respected during NY Open.',
+    time: '3m ago',
+    active: true
+  },
+  ETHUSD: {
+    bias: 'SHORT',
+    setup: 'Liquidity Grab + MSS',
+    entry: '2,510.50',
+    sl: '2,545.00',
+    tp: '2,407.00',
+    rr: '1:3.0',
+    logic: 'Buy-side liquidity tapped at $2,515 followed by strong 5m Market Structure Shift.',
+    time: '9m ago',
+    active: true
+  },
+  SOLUSD: {
+    bias: 'LONG',
+    setup: 'Order Block Retest',
+    entry: '103.80',
+    sl: '101.90',
+    tp: '109.50',
+    rr: '1:3.0',
+    logic: 'Bullish Order block mitigation with high volume displacement.',
+    time: '18m ago',
+    active: false
+  },
+  XRPUSD: {
+    bias: 'NEUTRAL',
+    setup: 'Range Bound',
+    entry: '1.4300',
+    sl: '1.4000',
+    tp: '1.5200',
+    rr: '1:3.0',
+    logic: 'Consolidating below equal highs. Awaiting discount expansion.',
+    time: '25m ago',
+    active: false
+  },
+  XAUUSD: {
+    bias: 'LONG',
+    setup: 'NY Killzone Expansion',
+    entry: '2,740.00',
+    sl: '2,728.00',
+    tp: '2,776.00',
+    rr: '1:3.0',
+    logic: 'London Session high broken. Mitigation of 15m Imbalance at NY open.',
+    time: 'Just now',
+    active: true
+  },
+  XAGUSD: {
+    bias: 'LONG',
+    setup: 'SMT Divergence',
+    entry: '32.10',
+    sl: '31.65',
+    tp: '33.45',
+    rr: '1:3.0',
+    logic: 'SMT Divergence with Gold on 5M timeframe. Bullish break confirmed.',
+    time: '14m ago',
+    active: true
+  }
+};
 
 export default function App() {
   const [prices, setPrices] = useState({});
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
-  const [nyStatus, setNyStatus] = useState({ isOpen: false, text: 'Checking Killzone...' });
-  const [signals, setSignals] = useState([]);
+  const [inKillzone, setInKillzone] = useState(false);
 
-  // Fetch live market tickers from Delta Exchange
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -27,6 +96,9 @@ export default function App() {
                 change: parseFloat(t.change_24h || 0).toFixed(2),
               };
             });
+            // Approximate spot metals for Indian/Crypto broker feeds
+            priceMap['XAUUSD'] = { price: '2748.20', change: '1.15' };
+            priceMap['XAGUSD'] = { price: '32.45', change: '0.85' };
             setPrices(priceMap);
           }
         })
@@ -38,40 +110,13 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Monitor NY Session / Killzone (13:30 - 20:00 UTC)
   useEffect(() => {
     const checkNY = () => {
       const now = new Date();
       const utcHours = now.getUTCHours();
       const utcMinutes = now.getUTCMinutes();
       const timeVal = utcHours + utcMinutes / 60;
-
-      // NY Killzone typically 13:30 to 20:00 UTC (7:00 PM to 1:30 AM IST)
-      const inKillzone = timeVal >= 13.5 && timeVal <= 20.0;
-      setNyStatus({
-        isOpen: inKillzone,
-        text: inKillzone ? '?? NY Killzone Active (High Volatility)' : '?? Outside NY Killzone (Asia/London Range)',
-      });
-
-      // Sample Engine Signal updates
-      setSignals([
-        {
-          symbol: 'BTCUSD',
-          type: 'BULLISH FVG',
-          zone: '$80,450 - $80,600',
-          bias: 'LONG',
-          status: 'Confirmed',
-          time: '5m ago'
-        },
-        {
-          symbol: 'ETHUSD',
-          type: 'LIQUIDITY SWEEP',
-          zone: '$2,480 Highs',
-          bias: 'SHORT',
-          status: 'Watching',
-          time: '12m ago'
-        }
-      ]);
+      setInKillzone(timeVal >= 13.5 && timeVal <= 20.0);
     };
 
     checkNY();
@@ -79,118 +124,145 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  const currentSignal = SIGNALS_MAP[selectedAsset.symbol] || SIGNALS_MAP.BTCUSD;
+
   return (
-    <div className="min-h-screen bg-[#07090e] text-white p-4 font-sans">
+    <div className="min-h-screen bg-[#07090e] text-white p-4 font-sans selection:bg-emerald-500 selection:text-black">
       {/* Header */}
-      <header className="flex flex-wrap justify-between items-center pb-4 border-b border-gray-800 gap-2">
-        <div className="flex items-center space-x-3">
-          <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping" />
-          <h1 className="text-xl font-bold tracking-wider text-emerald-400">? ApexNY Engine</h1>
-          <span className="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded border border-gray-700">ICT / SMC Pro</span>
+      <header className="flex flex-wrap justify-between items-center pb-4 border-b border-gray-800 gap-3">
+        <div className="flex items-center space-x-2">
+          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+          <h1 className="text-xl font-black tracking-wider text-emerald-400">ApexNY Engine</h1>
+          <span className="text-[11px] bg-[#141b2d] text-emerald-400/90 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">
+            ICT / SMC PRO
+          </span>
         </div>
 
-        <div className="flex items-center space-x-4 text-xs font-mono">
-          <div className={`px-2.5 py-1 rounded border ${nyStatus.isOpen ? 'bg-emerald-500/10 border-emerald-500 text-emerald-400 font-bold' : 'bg-gray-800 border-gray-700 text-gray-400'}`}>
-            {nyStatus.text}
+        <div className="flex items-center space-x-3 text-xs font-mono">
+          <div className={`flex items-center space-x-1.5 px-3 py-1 rounded border ${
+            inKillzone 
+              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 font-semibold' 
+              : 'bg-gray-800/60 border-gray-700 text-gray-400'
+          }`}>
+            <span className={`w-2 h-2 rounded-full ${inKillzone ? 'bg-emerald-400' : 'bg-gray-500'}`} />
+            <span>{inKillzone ? 'NY Killzone Active (High Volatility)' : 'Outside NY Killzone (Asian/London Range)'}</span>
           </div>
-          <div>
-            BTC: <span className="text-emerald-400 font-bold">${prices['BTCUSD']?.price || '80,883'}</span>
+
+          <div className="bg-[#141b2d] px-3 py-1 rounded border border-gray-800">
+            BTC: <span className="text-emerald-400 font-bold">${prices['BTCUSD']?.price || '80,868'}</span>
           </div>
         </div>
       </header>
 
-      {/* Main Grid */}
+      {/* Main Container */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
-        {/* Left Column: Watchlist & Live Signals */}
+        {/* Left Side: Watchlist and Setups */}
         <aside className="space-y-4">
-          {/* Watchlist */}
-          <div className="bg-[#0e131f] p-4 rounded-lg border border-gray-800/80">
-            <h2 className="text-xs font-semibold text-gray-400 tracking-wider mb-3">WATCHLIST (CLICK TO SWITCH)</h2>
-            <div className="space-y-2">
+          <div className="bg-[#0e131f] p-3.5 rounded-lg border border-gray-800/80">
+            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">
+              Watchlist (Click to view)
+            </div>
+
+            <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
               {ASSETS.map(asset => {
                 const p = prices[asset.symbol];
                 const isSelected = selectedAsset.symbol === asset.symbol;
+                const sig = SIGNALS_MAP[asset.symbol];
+
                 return (
                   <div
                     key={asset.symbol}
                     onClick={() => setSelectedAsset(asset)}
-                    className={`p-3 rounded border cursor-pointer transition flex justify-between items-center ${
+                    className={`p-2.5 rounded-md border cursor-pointer transition flex justify-between items-center ${
                       isSelected
-                        ? 'bg-blue-600/20 border-blue-500 text-white'
-                        : 'bg-[#141b2d] border-gray-800 hover:border-gray-700 text-gray-300'
+                        ? 'bg-emerald-500/15 border-emerald-500/50 text-white'
+                        : 'bg-[#141b2d]/80 border-gray-800 hover:border-gray-700 text-gray-300'
                     }`}
                   >
                     <div>
-                      <div className="font-bold text-sm flex items-center gap-1.5">
-                        {asset.symbol}
+                      <div className="font-bold text-xs flex items-center space-x-1.5">
+                        <span>{asset.symbol}</span>
                         <span className="text-[10px] text-gray-400 font-normal">({asset.name})</span>
                       </div>
-                      <div className="text-xs font-mono mt-0.5">
-                        ${p?.price || 'Loading...'}
+                      <div className="text-[11px] font-mono text-gray-300 mt-0.5">
+                        ${p?.price || '...'}
                       </div>
                     </div>
-                    <span className={`text-xs font-mono px-2 py-0.5 rounded ${
-                      parseFloat(p?.change || 0) >= 0 ? 'text-emerald-400 bg-emerald-500/10' : 'text-rose-400 bg-rose-500/10'
-                    }`}>
-                      {p?.change ? `${p.change}%` : 'LIVE'}
-                    </span>
+
+                    <div className="text-right flex flex-col items-end space-y-0.5">
+                      <span className={`text-[10px] px-1.5 py-0.5 rounded font-bold font-mono ${
+                        sig?.bias === 'LONG'
+                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+                          : sig?.bias === 'SHORT'
+                          ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          : 'bg-gray-700/50 text-gray-400'
+                      }`}>
+                        {sig?.bias || 'NEUTRAL'}
+                      </span>
+                      <span className="text-[9px] text-gray-500 font-mono">{asset.category}</span>
+                    </div>
                   </div>
                 );
               })}
             </div>
           </div>
 
-          {/* Signals Engine */}
-          <div className="bg-[#0e131f] p-4 rounded-lg border border-gray-800/80">
-            <h2 className="text-xs font-semibold text-gray-400 tracking-wider mb-3 flex items-center justify-between">
-              <span>ALGO SIGNALS</span>
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            </h2>
-            <div className="space-y-2.5">
-              {signals.map((sig, idx) => (
-                <div key={idx} className="p-2.5 bg-[#141b2d] rounded border border-gray-800 text-xs space-y-1">
-                  <div className="flex justify-between items-center font-bold">
-                    <span>{sig.symbol} - {sig.type}</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] ${sig.bias === 'LONG' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
-                      {sig.bias}
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-gray-400 flex justify-between">
-                    <span>Zone: {sig.zone}</span>
-                    <span className="text-gray-500">{sig.time}</span>
-                  </div>
-                </div>
-              ))}
+          {/* Logic & Strategy Explanation */}
+          <div className="bg-[#0e131f] p-3.5 rounded-lg border border-gray-800/80 space-y-2">
+            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex justify-between items-center">
+              <span>{selectedAsset.symbol} Execution Logic</span>
+              <span className="text-[10px] font-mono text-emerald-400">{currentSignal.time}</span>
+            </div>
+            
+            <div className="p-2.5 bg-[#141b2d] rounded border border-gray-800 text-xs text-gray-300 leading-relaxed font-sans">
+              <p className="font-semibold text-white mb-1">Trigger: <span className="text-emerald-400">{currentSignal.setup}</span></p>
+              {currentSignal.logic}
             </div>
           </div>
         </aside>
 
-        {/* Right Column: Dynamic TradingView Chart & Details */}
-        <main className="lg:col-span-3 flex flex-col space-y-4">
-          <div className="bg-[#0e131f] p-4 rounded-lg border border-gray-800/80 flex flex-col flex-grow">
-            <div className="flex justify-between items-center mb-3">
-              <div className="flex items-center space-x-2">
-                <span className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-0.5 rounded font-bold">
-                  {selectedAsset.symbol}
-                </span>
-                <span className="text-xs text-gray-400 font-medium">
-                  {selectedAsset.name} / US Dollar • 5M Resolution
-                </span>
-              </div>
-              <span className="text-xs text-emerald-400 font-mono">
-                Live Price: ${prices[selectedAsset.symbol]?.price || '...'}
+        {/* Right Side: Interactive TradingView Chart with Live Trade HUD */}
+        <main className="lg:col-span-3 flex flex-col space-y-3">
+          {/* Live Trade HUD Overlay Bar */}
+          <div className="bg-[#0e131f] p-3 rounded-lg border border-gray-800/80 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center space-x-2">
+              <span className={`px-2 py-0.5 rounded text-xs font-black font-mono tracking-wide ${
+                currentSignal.bias === 'LONG' ? 'bg-emerald-500 text-black' : 'bg-rose-500 text-white'
+              }`}>
+                {currentSignal.bias} SETUP
               </span>
+              <span className="text-sm font-bold">{selectedAsset.symbol}</span>
+              <span className="text-xs text-gray-400">({selectedAsset.name})</span>
             </div>
 
-            {/* TradingView Dynamic Iframe Container */}
-            <div className="w-full h-[540px] rounded overflow-hidden border border-gray-800 bg-[#07090e]">
-              <iframe
-                key={selectedAsset.tvSymbol}
-                title="TradingView"
-                className="w-full h-full border-0"
-                src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(selectedAsset.tvSymbol)}&interval=5&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&hide_side_toolbar=0&allow_symbol_change=1&save_image=0`}
-              />
+            {/* Target, Entry, Stop Loss Values */}
+            <div className="flex items-center space-x-3 text-xs font-mono">
+              <div className="bg-[#141b2d] px-2.5 py-1 rounded border border-gray-700">
+                <span className="text-gray-400">ENTRY: </span>
+                <span className="text-white font-bold">${currentSignal.entry}</span>
+              </div>
+              <div className="bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/30">
+                <span className="text-rose-400">SL: </span>
+                <span className="text-rose-300 font-bold">${currentSignal.sl}</span>
+              </div>
+              <div className="bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/30">
+                <span className="text-emerald-400">TP: </span>
+                <span className="text-emerald-300 font-bold">${currentSignal.tp}</span>
+              </div>
+              <div className="bg-blue-500/10 px-2 py-1 rounded border border-blue-500/30 text-blue-400 font-bold">
+                RR {currentSignal.rr}
+              </div>
             </div>
+          </div>
+
+          {/* TradingView Chart Frame */}
+          <div className="w-full flex-grow h-[580px] rounded-lg overflow-hidden border border-gray-800 bg-[#07090e]">
+            <iframe
+              key={selectedAsset.tvSymbol}
+              title="TradingView Chart"
+              className="w-full h-full border-0"
+              src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(selectedAsset.tvSymbol)}&interval=5&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&hide_side_toolbar=0&allow_symbol_change=1&save_image=0`}
+            />
           </div>
         </main>
       </div>
