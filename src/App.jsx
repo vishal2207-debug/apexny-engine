@@ -230,17 +230,16 @@ export default function App() {
       <header className="flex flex-wrap items-center justify-between pb-4 mb-4 border-b border-slate-800/80 gap-3">
         <div className="flex items-center space-x-3">
           <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping" />
-          <div className="flex items-center gap-2">
-            <span className="text-2xl animate-pulse inline-block">{"\u{1F1EE}\u{1F1F3}"}</span>
-            <div>
-              <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
-                APEX<span className="text-emerald-400">PRO</span>
-                <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                  TERMINAL v6.2
-                </span>
-              </h1>
-              <p className="text-[11px] text-emerald-400 font-mono">By Mr. Vishal Langade • Proudly Indian {"\u{1F1EE}\u{1F1F3}"}</p>
-            </div>
+          <div>
+            <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
+              APEX<span className="text-emerald-400">PRO</span>
+              <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                TERMINAL v6.3
+              </span>
+            </h1>
+            <p className="text-[11px] text-emerald-400 font-mono">
+              By Mr. Vishal Langade • <span className="text-amber-400 font-bold">Proudly Indian</span>
+            </p>
           </div>
         </div>
 
@@ -566,7 +565,7 @@ export default function App() {
                 <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
               </div>
               <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
-                <span className="text-emerald-400 text-[10px]">TP: </span>
+                <span className="text-slate-400 text-[10px]">TP: </span>
                 <span className="text-emerald-300 font-bold">${formatPrice(activeStructure.tp)}</span>
               </div>
             </div>
@@ -587,7 +586,7 @@ export default function App() {
       <footer className="mt-4 p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
         <div className="flex items-center gap-2 font-mono">
           <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
-          <span>Proudly Indian {"\u{1F1EE}\u{1F1F3}"} • Designed by Mr. Vishal Langade</span>
+          <span>Designed by Mr. Vishal Langade • Proudly Indian</span>
         </div>
         <div className="font-mono text-emerald-400 font-bold">
           Crafted with Precision by Mr. Vishal Langade
