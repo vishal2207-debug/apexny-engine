@@ -11,13 +11,13 @@ const ASSETS = [
 
 export default function App() {
   const [prices, setPrices] = useState({});
-  const [selectedAsset, setSelectedAsset] = useState(ASSETS[4]); // Gold Default
+  const [selectedAsset, setSelectedAsset] = useState(ASSETS[4]);
   const [structure, setStructure] = useState({});
   const [timeUTC, setTimeUTC] = useState('');
-  const [inKillzone, setInKillzone] = useState(false);
+  const [activeSession, setActiveSession] = useState({ name: '24H GLOBAL', color: 'emerald' });
   const [accountSize, setAccountSize] = useState(10000);
 
-  // Live market price feed
+  // Live prices
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -44,25 +44,44 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Clock & Killzone check
+  // 24-Hour Continuous Global Session Tracker (UTC)
   useEffect(() => {
-    const checkNY = () => {
+    const track24hSessions = () => {
       const now = new Date();
       const utcHours = now.getUTCHours();
       const utcMinutes = now.getUTCMinutes();
       const timeVal = utcHours + utcMinutes / 60;
-      setInKillzone(timeVal >= 13.5 && timeVal <= 20.0);
+
+      // Asian: 00:00 - 08:00 UTC | London: 07:00 - 16:00 UTC | New York: 13:00 - 22:00 UTC
+      let sessionName = 'ASIAN SESSION';
+      let badgeColor = 'cyan';
+
+      if (timeVal >= 13.0 && timeVal <= 16.5) {
+        sessionName = 'LONDON + NY OVERLAP';
+        badgeColor = 'amber';
+      } else if (timeVal >= 13.0 && timeVal <= 22.0) {
+        sessionName = 'NEW YORK SESSION';
+        badgeColor = 'emerald';
+      } else if (timeVal >= 7.0 && timeVal < 13.0) {
+        sessionName = 'LONDON SESSION';
+        badgeColor = 'blue';
+      } else {
+        sessionName = 'ASIAN SESSION';
+        badgeColor = 'cyan';
+      }
+
+      setActiveSession({ name: sessionName, color: badgeColor });
       setTimeUTC(now.toUTCString().split(' ')[4] + ' UTC');
     };
 
-    checkNY();
-    const timer = setInterval(checkNY, 1000);
+    track24hSessions();
+    const timer = setInterval(track24hSessions, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Bi-Directional Auto SMC Structure Engine (Handles BOTH Bullish & Bearish breaks)
+  // 24-Hour Bi-Directional SMC Engine (Active Day & Night)
   useEffect(() => {
-    const detectBiDirectionalStructure = () => {
+    const run24hSMCEngine = () => {
       const currentCMP = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
       const step = currentCMP < 10 ? 0.05 : currentCMP * 0.004;
 
@@ -73,25 +92,19 @@ export default function App() {
 
       setStructure(prev => {
         const stored = prev[selectedAsset.symbol];
-        
-        // Preserve anchored setup if price is still moving inside the defined structure
         if (stored && currentCMP <= stored.swingHigh && currentCMP >= stored.swingLow) {
           return prev;
         }
 
-        // Determine Bias based on breakout direction
         const isBullish = currentCMP >= midpoint;
-        
         let entry, sl, tp, status;
 
         if (isBullish) {
-          // Bullish: Entry at discount FVG, SL below swing low, TP at 1:3 RR
           entry = swingLow + (swingHigh - swingLow) * 0.45;
           sl = swingLow - (step * 0.25);
           tp = entry + ((entry - sl) * 3);
           status = 'BULLISH BOS / LONG';
         } else {
-          // Bearish: Entry at premium FVG, SL above swing high, TP at 1:3 RR
           entry = swingHigh - (swingHigh - swingLow) * 0.45;
           sl = swingHigh + (step * 0.25);
           tp = entry - ((sl - entry) * 3);
@@ -114,7 +127,7 @@ export default function App() {
       });
     };
 
-    detectBiDirectionalStructure();
+    run24hSMCEngine();
   }, [prices, selectedAsset]);
 
   const currentCMP = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
@@ -125,7 +138,7 @@ export default function App() {
     entry: currentCMP * 0.998,
     sl: currentCMP * 0.993,
     tp: currentCMP * 1.013,
-    status: 'ANALYZING CANDLES',
+    status: 'SCANNING 24H LIQUIDITY',
     timestamp: 'Live'
   };
 
@@ -144,7 +157,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#05070b] text-slate-200 p-3 md:p-5 font-sans selection:bg-emerald-500 selection:text-black">
-      {/* Header */}
+      {/* 24-Hour Multi-Session Global Header */}
       <header className="flex flex-wrap items-center justify-between pb-4 mb-4 border-b border-slate-800/80 gap-3">
         <div className="flex items-center space-x-3">
           <div className="relative flex items-center justify-center">
@@ -154,11 +167,9 @@ export default function App() {
           <div>
             <div className="flex items-center space-x-2">
               <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
-                APEX<span className={isLong ? "text-emerald-400" : "text-rose-400"}>NY</span>
-                <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
-                  isLong ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30' : 'bg-rose-500/10 text-rose-300 border-rose-500/30'
-                }`}>
-                  BI-DIRECTIONAL SMC
+                APEX<span className={isLong ? "text-emerald-400" : "text-rose-400"}>PRO</span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
+                  24/7 GLOBAL ENGINE
                 </span>
               </h1>
             </div>
@@ -167,23 +178,21 @@ export default function App() {
                 Proprietary Architecture by Mr. Vishal Langade
               </span>
               <span>•</span>
-              <span>Bullish & Bearish Dual-Execution Engine</span>
+              <span>Continuous 24-Hour Asian, London & NY Cycles</span>
             </div>
           </div>
         </div>
 
+        {/* 24H Global Sessions HUD */}
         <div className="flex items-center gap-2 md:gap-3 flex-wrap text-xs font-mono">
-          <div className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border ${
-            inKillzone 
-              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 font-semibold' 
-              : 'bg-gray-800/60 border-gray-700 text-gray-400'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${inKillzone ? 'bg-emerald-400 animate-pulse' : 'bg-gray-500'}`} />
-            <span>{inKillzone ? 'NY Killzone: ACTIVE' : 'Outside NY Killzone'}</span>
+          <div className="bg-[#0b101b] border border-slate-800 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-sm">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-slate-400">ACTIVE SESSION:</span>
+            <span className="text-emerald-400 font-bold">{activeSession.name}</span>
           </div>
 
           <div className="bg-[#0b101b] border border-slate-800 px-3 py-1.5 rounded-lg text-slate-300">
-            TIME: <span className="text-white font-bold">{timeUTC}</span>
+            UTC: <span className="text-white font-bold">{timeUTC}</span>
           </div>
 
           <div className="bg-[#0b101b] border border-slate-800 px-3 py-1.5 rounded-lg">
@@ -194,12 +203,12 @@ export default function App() {
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Left Column: Watchlist */}
+        {/* Left Column: Watchlist & Risk */}
         <aside className="space-y-4">
           <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 shadow-xl">
             <div className="flex items-center justify-between mb-3 px-1">
-              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">WATCHLIST</span>
-              <span className="text-[10px] text-emerald-400 font-mono">Dual Feed</span>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">24H WATCHLIST</span>
+              <span className="text-[10px] text-emerald-400 font-mono">Live Sync</span>
             </div>
 
             <div className="space-y-2">
@@ -268,7 +277,7 @@ export default function App() {
           </div>
         </aside>
 
-        {/* Right Column: Bi-Directional Execution HUD */}
+        {/* Right Column: 24-Hour Cockpit */}
         <main className="lg:col-span-3 flex flex-col space-y-3">
           <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 shadow-lg">
             <div className="flex items-center space-x-2.5">
@@ -286,12 +295,12 @@ export default function App() {
                 </div>
                 <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                   CMP: <span className="text-emerald-400 font-bold">${formatPrice(currentCMP)}</span>
-                  <span className="ml-2 text-slate-500">• Anchored at {activeStructure.timestamp}</span>
+                  <span className="ml-2 text-slate-500">• Structure Level: {activeStructure.timestamp}</span>
                 </div>
               </div>
             </div>
 
-            {/* Exact Dynamic Anchored Levels */}
+            {/* Dynamic 24-Hour Levels */}
             <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
               <div className="bg-[#0d1322] px-3 py-1.5 rounded-lg border border-cyan-500/40 shadow">
                 <span className="text-slate-400 text-[10px] block">{isLong ? 'DISCOUNT ENTRY' : 'PREMIUM ENTRY'}</span>
@@ -313,12 +322,12 @@ export default function App() {
                   ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500 animate-pulse'
                   : 'bg-slate-800/80 text-slate-300 border-slate-700'
               }`}>
-                {isAtRetest ? '?? IN EXECUTION ZONE' : 'STRUCTURE LOCKED'}
+                {isAtRetest ? '?? IN RETEST ZONE' : 'STRUCTURE LOCKED'}
               </div>
             </div>
           </div>
 
-          {/* Clean Interactive TradingView Chart */}
+          {/* Full Advanced TradingView Chart Frame */}
           <div className="w-full flex-grow h-[580px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
             <iframe
               key={selectedAsset.tvSymbol}
@@ -332,7 +341,7 @@ export default function App() {
           <footer className="p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
             <div className="flex items-center gap-2 font-mono">
               <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Bi-Directional Engine: Monitoring Bullish/Bearish Structure Shifts</span>
+              <span>Global Protocol: 24-Hour Continuous Market Scanner Active</span>
             </div>
             <div className="font-mono text-emerald-400 font-bold tracking-wide">
               Crafted with Precision by Mr. Vishal Langade
