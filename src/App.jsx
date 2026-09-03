@@ -48,7 +48,8 @@ export default function App() {
     const endTime = Math.floor(Date.now() / 1000);
     const startTime = endTime - 24 * 60 * 60;
 
-    fetch(`https://api.india.delta.exchange/v2/chart/history?symbol=BTCUSD&resolution=5m&start=${startTime}&end=${endTime}`)
+    // Delta Exchange API resolution '5' used instead of '5m'
+    fetch(`https://api.india.delta.exchange/v2/chart/history?symbol=BTCUSD&resolution=5&start=${startTime}&end=${endTime}`)
       .then(r => r.json())
       .then(res => {
         const rawCandles = res.result || [];
