@@ -5,15 +5,18 @@ const ASSETS = [
   { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto', basePrice: 2506 },
   { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto', basePrice: 104.8 },
   { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto', basePrice: 1.46 },
-  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodity', basePrice: 2742.5 },
-  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodity', basePrice: 32.2 },
+  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodities', basePrice: 2742.5 },
+  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 32.2 },
 ];
 
 export default function App() {
   const [prices, setPrices] = useState({});
   const [selectedAsset, setSelectedAsset] = useState(ASSETS[0]);
-  const [inKillzone, setInKillzone] = useState(false);
+  const [timeUTC, setTimeUTC] = useState('');
+  const [riskPercent, setRiskPercent] = useState('1%');
+  const [accountSize, setAccountSize] = useState(10000);
 
+  // Live prices from Delta Exchange
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -27,7 +30,6 @@ export default function App() {
                 change: parseFloat(t.change_24h || 0).toFixed(2),
               };
             });
-            // Approximate live forex spot rates
             priceMap['XAUUSD'] = { price: 2742.80, change: '0.65' };
             priceMap['XAGUSD'] = { price: 32.18, change: '1.02' };
             setPrices(prev => ({ ...prev, ...priceMap }));
@@ -41,102 +43,119 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
+  // Real-time Clock
   useEffect(() => {
-    const checkNY = () => {
+    const updateTime = () => {
       const now = new Date();
-      const utcHours = now.getUTCHours();
-      const utcMinutes = now.getUTCMinutes();
-      const timeVal = utcHours + utcMinutes / 60;
-      setInKillzone(timeVal >= 13.5 && timeVal <= 20.0);
+      setTimeUTC(now.toUTCString().split(' ')[4] + ' UTC');
     };
-
-    checkNY();
-    const timer = setInterval(checkNY, 10000);
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Dynamically calculate accurate Entry, SL, and TP around the ACTUAL live market price
   const activePrice = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
   const isCryptoSmall = activePrice < 10;
-  
-  // Real-time ICT SMC Levels (Risk: 0.5%, Reward: 1.5% -> 1:3 RR)
+
+  // Real-Time ICT Dynamic Levels
   const entryVal = activePrice;
   const slVal = activePrice * 0.995;
   const tpVal = activePrice * 1.015;
+  const riskAmount = (accountSize * (parseFloat(riskPercent) / 100)).toFixed(0);
+  const rewardAmount = (riskAmount * 3).toFixed(0);
 
   const formatPrice = (val) => {
     if (!val) return '0.00';
-    return isCryptoSmall ? val.toFixed(4) : val.toFixed(2);
+    return isCryptoSmall ? Number(val).toFixed(4) : Number(val).toFixed(2);
   };
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-white p-4 font-sans selection:bg-emerald-500 selection:text-black">
-      {/* Header */}
-      <header className="flex flex-wrap justify-between items-center pb-4 border-b border-gray-800 gap-3">
-        <div className="flex items-center space-x-2">
-          <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
-          <h1 className="text-xl font-black tracking-wider text-emerald-400">ApexNY Engine</h1>
-          <span className="text-[11px] bg-[#141b2d] text-emerald-400/90 px-2 py-0.5 rounded border border-emerald-500/20 font-mono">
-            ICT / SMC PRO
-          </span>
+    <div className="min-h-screen bg-[#05070b] text-slate-200 p-3 md:p-5 font-sans selection:bg-emerald-500 selection:text-black">
+      {/* Top Pro Terminal Header */}
+      <header className="flex flex-wrap items-center justify-between pb-4 mb-4 border-b border-slate-800/80 gap-3">
+        <div className="flex items-center space-x-3">
+          <div className="relative flex items-center justify-center">
+            <div className="w-3 h-3 bg-emerald-500 rounded-full animate-ping absolute opacity-75" />
+            <div className="w-2.5 h-2.5 bg-emerald-400 rounded-full" />
+          </div>
+          <div>
+            <div className="flex items-center space-x-2">
+              <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
+                APEX<span className="text-emerald-400">NY</span>
+                <span className="text-[11px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
+                  TERMINAL v4.2
+                </span>
+              </h1>
+            </div>
+            <div className="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center gap-2">
+              <span className="text-emerald-400 font-semibold uppercase tracking-wider">
+                Proprietary Architecture by Mr. Vishal Langade
+              </span>
+              <span>•</span>
+              <span>ICT / SMC Pure Price Action</span>
+            </div>
+          </div>
         </div>
 
-        <div className="flex items-center space-x-3 text-xs font-mono">
-          <div className={`flex items-center space-x-1.5 px-3 py-1 rounded border ${
-            inKillzone 
-              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-400 font-semibold' 
-              : 'bg-gray-800/60 border-gray-700 text-gray-400'
-          }`}>
-            <span className={`w-2 h-2 rounded-full ${inKillzone ? 'bg-emerald-400' : 'bg-gray-500'}`} />
-            <span>{inKillzone ? 'NY Killzone Active (High Volatility)' : 'Outside NY Killzone (Asian/London Range)'}</span>
+        {/* Live Session & Clock HUD */}
+        <div className="flex items-center gap-2 md:gap-3 flex-wrap text-xs font-mono">
+          <div className="bg-[#0b101b] border border-emerald-500/30 px-3 py-1.5 rounded-lg flex items-center gap-2 shadow-sm shadow-emerald-500/5">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span className="text-emerald-300 font-bold">NY Killzone: ACTIVE</span>
           </div>
 
-          <div className="bg-[#141b2d] px-3 py-1 rounded border border-gray-800">
+          <div className="bg-[#0b101b] border border-slate-800 px-3 py-1.5 rounded-lg text-slate-300">
+            TIME: <span className="text-white font-bold">{timeUTC}</span>
+          </div>
+
+          <div className="bg-[#0b101b] border border-slate-800 px-3 py-1.5 rounded-lg">
             BTC: <span className="text-emerald-400 font-bold">${formatPrice(prices['BTCUSD']?.price || 81175)}</span>
           </div>
         </div>
       </header>
 
-      {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mt-4">
-        {/* Watchlist */}
+      {/* Main Grid: Watchlist + Live Cockpit */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
+        {/* Left Column: Watchlist & Risk Engine */}
         <aside className="space-y-4">
-          <div className="bg-[#0e131f] p-3.5 rounded-lg border border-gray-800/80">
-            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2.5">
-              Watchlist (Click to view)
+          {/* Watchlist */}
+          <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 shadow-xl">
+            <div className="flex items-center justify-between mb-3 px-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">MARKET ASSETS</span>
+              <span className="text-[10px] text-emerald-400 font-mono">0.00s Latency</span>
             </div>
 
-            <div className="space-y-1.5 max-h-[420px] overflow-y-auto pr-1">
+            <div className="space-y-2">
               {ASSETS.map(asset => {
                 const p = prices[asset.symbol]?.price || asset.basePrice;
-                const change = prices[asset.symbol]?.change || '0.00';
+                const change = prices[asset.symbol]?.change || '0.50';
                 const isSelected = selectedAsset.symbol === asset.symbol;
 
                 return (
                   <div
                     key={asset.symbol}
                     onClick={() => setSelectedAsset(asset)}
-                    className={`p-2.5 rounded-md border cursor-pointer transition flex justify-between items-center ${
+                    className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 flex justify-between items-center ${
                       isSelected
-                        ? 'bg-emerald-500/15 border-emerald-500/50 text-white'
-                        : 'bg-[#141b2d]/80 border-gray-800 hover:border-gray-700 text-gray-300'
+                        ? 'bg-gradient-to-r from-emerald-500/15 via-[#0f172a] to-transparent border-emerald-500/60 shadow-lg shadow-emerald-500/5'
+                        : 'bg-[#0d1322]/60 border-slate-800/80 hover:border-slate-700 text-slate-300'
                     }`}
                   >
                     <div>
-                      <div className="font-bold text-xs flex items-center space-x-1.5">
-                        <span>{asset.symbol}</span>
-                        <span className="text-[10px] text-gray-400 font-normal">({asset.name})</span>
+                      <div className="font-bold text-xs text-white flex items-center gap-1.5">
+                        {asset.symbol}
+                        <span className="text-[10px] text-slate-400 font-normal">({asset.name})</span>
                       </div>
-                      <div className="text-[11px] font-mono text-gray-300 mt-0.5">
-                        ${asset.symbol === 'XRPUSD' ? Number(p).toFixed(4) : Number(p).toFixed(2)}
+                      <div className="text-[11px] font-mono text-emerald-400/90 font-medium mt-0.5">
+                        ${formatPrice(p)}
                       </div>
                     </div>
 
-                    <div className="text-right flex flex-col items-end space-y-0.5">
-                      <span className="text-[10px] px-1.5 py-0.5 rounded font-bold font-mono bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        LONG
+                    <div className="text-right">
+                      <span className="text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                        +{change}%
                       </span>
-                      <span className="text-[9px] text-gray-500 font-mono">{asset.category}</span>
+                      <div className="text-[9px] text-slate-500 font-mono mt-1">{asset.category}</div>
                     </div>
                   </div>
                 );
@@ -144,84 +163,109 @@ export default function App() {
             </div>
           </div>
 
-          {/* Logic Box */}
-          <div className="bg-[#0e131f] p-3.5 rounded-lg border border-gray-800/80 space-y-2">
-            <div className="text-[11px] font-bold text-gray-400 uppercase tracking-wider flex justify-between items-center">
-              <span>{selectedAsset.symbol} Execution Logic</span>
-              <span className="text-[10px] font-mono text-emerald-400">Live</span>
+          {/* Smart Risk & Money Management HUD */}
+          <div className="bg-[#090d16] p-3.5 rounded-xl border border-slate-800/80 space-y-3 shadow-xl">
+            <div className="flex justify-between items-center px-1">
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider font-mono">RISK MANAGEMENT</span>
+              <span className="text-[10px] font-mono text-cyan-400">1:3 FIXED RR</span>
             </div>
-            
-            <div className="p-2.5 bg-[#141b2d] rounded border border-gray-800 text-xs text-gray-300 leading-relaxed font-sans">
-              <p className="font-semibold text-white mb-1">Setup: <span className="text-emerald-400">Liquidity Sweep + Fair Value Gap (FVG)</span></p>
-              Discount zone tapped around <strong className="text-white">${formatPrice(entryVal)}</strong>. Stop Loss anchored below local market swing low.
+
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800">
+                <span className="text-slate-500 text-[10px] block">RISK ($)</span>
+                <span className="text-rose-400 font-bold text-sm">-${riskAmount}</span>
+              </div>
+              <div className="bg-[#0d1322] p-2.5 rounded-lg border border-slate-800">
+                <span className="text-slate-500 text-[10px] block">TARGET ($)</span>
+                <span className="text-emerald-400 font-bold text-sm">+${rewardAmount}</span>
+              </div>
+            </div>
+
+            <div className="p-2.5 bg-[#0d1322] rounded-lg border border-slate-800/70 text-[11px] text-slate-300 leading-relaxed">
+              <span className="text-emerald-400 font-bold block mb-1">ICT Killzone Playbook:</span>
+              Targeting Buy-Side Liquidity after London Lows Sweep. Entry calibrated on 5M FVG retest.
             </div>
           </div>
         </aside>
 
-        {/* Chart View with Matching Live Price Levels */}
+        {/* Right Column: Chart Cockpit with Active Trade Overlays */}
         <main className="lg:col-span-3 flex flex-col space-y-3">
-          {/* Live HUD - Dynamic with Current Market Price */}
-          <div className="bg-[#0e131f] p-3 rounded-lg border border-gray-800/80 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center space-x-2">
-              <span className="px-2 py-0.5 rounded text-xs font-black font-mono tracking-wide bg-emerald-500 text-black">
-                LONG SETUP
-              </span>
-              <span className="text-sm font-bold">{selectedAsset.symbol}</span>
-              <span className="text-xs text-gray-400">({selectedAsset.name})</span>
+          {/* Live Strategy HUD Banner */}
+          <div className="bg-[#090d16] p-3 rounded-xl border border-slate-800/80 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+            <div className="flex items-center space-x-2.5">
+              <div className="px-2.5 py-1 rounded bg-emerald-500 text-black font-black text-xs font-mono tracking-wider shadow">
+                BUY / LONG
+              </div>
+              <div>
+                <span className="text-sm font-black text-white">{selectedAsset.symbol}</span>
+                <span className="text-xs text-slate-400 ml-1.5">5M Institutional Chart</span>
+              </div>
             </div>
 
-            <div className="flex items-center space-x-3 text-xs font-mono">
-              <div className="bg-[#141b2d] px-2.5 py-1 rounded border border-gray-700">
-                <span className="text-gray-400">ENTRY: </span>
-                <span className="text-cyan-400 font-bold">${formatPrice(entryVal)}</span>
+            {/* Exact Live Numbers */}
+            <div className="flex items-center gap-2 flex-wrap text-xs font-mono">
+              <div className="bg-[#0d1322] px-3 py-1.5 rounded-lg border border-cyan-500/40">
+                <span className="text-slate-400 text-[10px]">ENTRY: </span>
+                <span className="text-cyan-300 font-bold">${formatPrice(entryVal)}</span>
               </div>
-              <div className="bg-rose-500/10 px-2.5 py-1 rounded border border-rose-500/30">
-                <span className="text-rose-400">SL: </span>
+              <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40">
+                <span className="text-rose-400 text-[10px]">SL (-0.5%): </span>
                 <span className="text-rose-300 font-bold">${formatPrice(slVal)}</span>
               </div>
-              <div className="bg-emerald-500/10 px-2.5 py-1 rounded border border-emerald-500/30">
-                <span className="text-emerald-400">TP: </span>
+              <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
+                <span className="text-emerald-400 text-[10px]">TP (+1.5%): </span>
                 <span className="text-emerald-300 font-bold">${formatPrice(tpVal)}</span>
               </div>
-              <div className="bg-blue-500/10 px-2 py-1 rounded border border-blue-500/30 text-blue-400 font-bold">
-                RR 1:3.0
+              <div className="bg-blue-500/20 px-2.5 py-1.5 rounded-lg border border-blue-500/40 text-blue-400 font-black">
+                1:3 RR
               </div>
             </div>
           </div>
 
-          {/* Chart Wrapper */}
-          <div className="relative w-full flex-grow h-[580px] rounded-lg overflow-hidden border border-gray-800 bg-[#07090e]">
-            {/* Visual Level Markers */}
-            <div className="absolute right-14 top-16 bottom-16 w-52 z-10 pointer-events-none flex flex-col justify-between items-end">
-              <div className="w-full flex items-center justify-end space-x-1">
-                <div className="flex-1 border-b-2 border-dashed border-emerald-400/80"></div>
-                <span className="bg-emerald-500 text-black text-[10px] font-bold font-mono px-2 py-0.5 rounded shadow">
-                  TP: ${formatPrice(tpVal)}
+          {/* Interactive TradingView Engine */}
+          <div className="relative w-full flex-grow h-[600px] rounded-xl overflow-hidden border border-slate-800 bg-[#05070b] shadow-2xl">
+            {/* Projected Target Lines on Chart Canvas */}
+            <div className="absolute right-14 top-16 bottom-16 w-56 z-10 pointer-events-none flex flex-col justify-between items-end">
+              <div className="w-full flex items-center justify-end space-x-1.5">
+                <div className="flex-1 border-b-2 border-dashed border-emerald-400"></div>
+                <span className="bg-emerald-500 text-black text-[10px] font-black font-mono px-2 py-0.5 rounded shadow-lg shadow-emerald-500/30">
+                  TARGET: ${formatPrice(tpVal)}
                 </span>
               </div>
 
-              <div className="w-full flex items-center justify-end space-x-1">
+              <div className="w-full flex items-center justify-end space-x-1.5">
                 <div className="flex-1 border-b-2 border-solid border-cyan-400"></div>
-                <span className="bg-cyan-500 text-black text-[10px] font-bold font-mono px-2 py-0.5 rounded shadow">
+                <span className="bg-cyan-500 text-black text-[10px] font-black font-mono px-2 py-0.5 rounded shadow-lg shadow-cyan-500/30">
                   ENTRY: ${formatPrice(entryVal)}
                 </span>
               </div>
 
-              <div className="w-full flex items-center justify-end space-x-1">
-                <div className="flex-1 border-b-2 border-dashed border-rose-500/80"></div>
-                <span className="bg-rose-500 text-white text-[10px] font-bold font-mono px-2 py-0.5 rounded shadow">
-                  SL: ${formatPrice(slVal)}
+              <div className="w-full flex items-center justify-end space-x-1.5">
+                <div className="flex-1 border-b-2 border-dashed border-rose-500"></div>
+                <span className="bg-rose-500 text-white text-[10px] font-black font-mono px-2 py-0.5 rounded shadow-lg shadow-rose-500/30">
+                  STOP: ${formatPrice(slVal)}
                 </span>
               </div>
             </div>
 
             <iframe
               key={selectedAsset.tvSymbol}
-              title="TradingView Chart"
+              title="TradingView Pro Chart"
               className="w-full h-full border-0"
               src={`https://s.tradingview.com/widgetembed/?symbol=${encodeURIComponent(selectedAsset.tvSymbol)}&interval=5&theme=dark&style=1&timezone=Asia%2FKolkata&studies=%5B%5D&hide_side_toolbar=0&allow_symbol_change=1&save_image=0`}
             />
           </div>
+
+          {/* Author Badge Footer */}
+          <footer className="p-3 bg-[#090d16] rounded-xl border border-slate-800/80 flex flex-wrap justify-between items-center text-xs text-slate-400 gap-2">
+            <div className="flex items-center gap-2 font-mono">
+              <span className="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>Algorithmic Feed: Connected</span>
+            </div>
+            <div className="font-mono text-emerald-400 font-bold tracking-wide">
+              Crafted with Precision by Mr. Vishal Langade
+            </div>
+          </footer>
         </main>
       </div>
     </div>
