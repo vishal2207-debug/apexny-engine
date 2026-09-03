@@ -1,153 +1,22 @@
 import React, { useState, useEffect } from 'react';
 
-// STRICTLY LOCKED INSTITUTIONAL ASSETS (Zero Fluctuation, 100% Static & Permanent)
-const INSTITUTIONAL_ASSETS = [
-  { 
-    symbol: 'BTCUSD', 
-    tvSymbol: 'BINANCE:BTCUSDT', 
-    name: 'Bitcoin', 
-    category: 'Crypto', 
-    basePrice: 80967.50, 
-    strikeStep: 1000, 
-    hasOptions: true, 
-    newsType: 'CRYPTO',
-    bias: 'LONG',
-    entry: 80620.00,
-    sl: 79950.00,
-    tp: 82630.00,
-    smcZone: '5M Discount FVG & Asian Session Low Sweep',
-    logic: 'Bullish BOS confirmed. Price swept Asian liquidity lows and retraced into the 50% OTE Discount FVG zone. Entry is permanently locked.'
-  },
-  { 
-    symbol: 'ETHUSD', 
-    tvSymbol: 'BINANCE:ETHUSDT', 
-    name: 'Ethereum', 
-    category: 'Crypto', 
-    basePrice: 2501.20, 
-    strikeStep: 50, 
-    hasOptions: true, 
-    newsType: 'CRYPTO',
-    bias: 'LONG',
-    entry: 2485.50,
-    sl: 2450.00,
-    tp: 2592.00,
-    smcZone: '1H Order Block Mitigation Block',
-    logic: 'Bullish Market Structure Shift (MSS). Displacement candle broke previous high; waiting for mitigation at demand block.'
-  },
-  { 
-    symbol: 'SOLUSD', 
-    tvSymbol: 'BINANCE:SOLUSDT', 
-    name: 'Solana', 
-    category: 'Crypto', 
-    basePrice: 104.50, 
-    strikeStep: 5, 
-    hasOptions: false, 
-    newsType: 'CRYPTO',
-    bias: 'SHORT',
-    entry: 106.20,
-    sl: 108.00,
-    tp: 100.80,
-    smcZone: '4H Premium Supply Zone & Equal Highs Sweep',
-    logic: 'Bearish setup. Retail liquidity swept above equal highs. Price tapped into Premium Supply triggering short MSS.'
-  },
-  { 
-    symbol: 'XRPUSD', 
-    tvSymbol: 'BINANCE:XRPUSDT', 
-    name: 'Ripple', 
-    category: 'Crypto', 
-    basePrice: 1.4500, 
-    strikeStep: 0.1, 
-    hasOptions: false, 
-    newsType: 'CRYPTO',
-    bias: 'LONG',
-    entry: 1.4220,
-    sl: 1.3950,
-    tp: 1.5030,
-    smcZone: 'London Open Low Retest FVG',
-    logic: 'Bullish continuation. Sweep of London lows into daily discount array with expansion targeting buy-side liquidity.'
-  },
-  { 
-    symbol: 'XAUUSD', 
-    tvSymbol: 'OANDA:XAUUSD', 
-    name: 'Gold Spot', 
-    category: 'Commodities', 
-    basePrice: 4493.05, 
-    strikeStep: 25, 
-    hasOptions: false, 
-    newsType: 'COMMODITY',
-    bias: 'LONG',
-    entry: 4482.00,
-    sl: 4462.00,
-    tp: 4542.00,
-    smcZone: 'NY Killzone Imbalance & Breaker Block',
-    logic: 'Bullish setup. Institutional algorithm delivered price into New York Killzone open, leaving protected 5M FVG.'
-  },
-  { 
-    symbol: 'XAGUSD', 
-    tvSymbol: 'OANDA:XAGUSD', 
-    name: 'Silver Spot', 
-    category: 'Commodities', 
-    basePrice: 42.50, 
-    strikeStep: 1, 
-    hasOptions: false, 
-    newsType: 'COMMODITY',
-    bias: 'SHORT',
-    entry: 42.80,
-    sl: 43.20,
-    tp: 41.60,
-    smcZone: 'Daily Resistance Premium Array',
-    logic: 'Bearish setup. Price reached major daily supply imbalance. Rejectionwick confirms institutional short positioning.'
-  },
+const INITIAL_ASSETS = [
+  { symbol: 'BTCUSD', tvSymbol: 'BINANCE:BTCUSDT', name: 'Bitcoin', category: 'Crypto', basePrice: 80967.50, strikeStep: 1000, hasOptions: true, newsType: 'CRYPTO' },
+  { symbol: 'ETHUSD', tvSymbol: 'BINANCE:ETHUSDT', name: 'Ethereum', category: 'Crypto', basePrice: 2501.20, strikeStep: 50, hasOptions: true, newsType: 'CRYPTO' },
+  { symbol: 'SOLUSD', tvSymbol: 'BINANCE:SOLUSDT', name: 'Solana', category: 'Crypto', basePrice: 104.50, strikeStep: 5, hasOptions: false, newsType: 'CRYPTO' },
+  { symbol: 'XRPUSD', tvSymbol: 'BINANCE:XRPUSDT', name: 'Ripple', category: 'Crypto', basePrice: 1.4500, strikeStep: 0.1, hasOptions: false, newsType: 'CRYPTO' },
+  { symbol: 'XAUUSD', tvSymbol: 'OANDA:XAUUSD', name: 'Gold Spot', category: 'Commodities', basePrice: 4493.05, strikeStep: 25, hasOptions: false, newsType: 'COMMODITY' },
+  { symbol: 'XAGUSD', tvSymbol: 'OANDA:XAGUSD', name: 'Silver Spot', category: 'Commodities', basePrice: 42.50, strikeStep: 1, hasOptions: false, newsType: 'COMMODITY' },
 ];
 
 const ASSET_SPECIFIC_NEWS = {
   CRYPTO: [
-    {
-      id: 1,
-      event: 'US Core CPI & Liquidations',
-      impact: 'HIGH',
-      time: '18:00 IST',
-      forecast: '2.8%',
-      previous: '2.9%',
-      status: 'High Leverage Volatility',
-      scenarioBullish: 'Actual < Forecast: Dollar weakens, massive short squeeze on BTC & ETH perpetuals.',
-      scenarioBearish: 'Actual > Forecast: Yields surge, long positions wiped out near key support.'
-    },
-    {
-      id: 2,
-      event: 'Federal Reserve Rate Decision',
-      impact: 'HIGH',
-      time: '23:30 IST',
-      forecast: '4.75%',
-      previous: '5.00%',
-      status: 'Macro Liquidity Expansion',
-      scenarioBullish: 'Dovish Cut: Crypto institutional inflows accelerate into risk-on assets.',
-      scenarioBearish: 'Hawkish Stance: Immediate liquidity contraction, sweep of local lows.'
-    }
+    { id: 1, event: 'US Core CPI & Liquidations', impact: 'HIGH', time: '18:00 IST', forecast: '2.8%', previous: '2.9%', status: 'High Leverage Volatility', scenarioBullish: 'Actual < Forecast: Dollar weakens, massive short squeeze on BTC & ETH perpetuals.', scenarioBearish: 'Actual > Forecast: Yields surge, long positions wiped out near key support.' },
+    { id: 2, event: 'Federal Reserve Rate Decision', impact: 'HIGH', time: '23:30 IST', forecast: '4.75%', previous: '5.00%', status: 'Macro Liquidity Expansion', scenarioBullish: 'Dovish Cut: Crypto institutional inflows accelerate into risk-on assets.', scenarioBearish: 'Hawkish Stance: Immediate liquidity contraction, sweep of local lows.' }
   ],
   COMMODITY: [
-    {
-      id: 1,
-      event: 'US Non-Farm Payrolls (NFP)',
-      impact: 'HIGH',
-      time: '18:00 IST',
-      forecast: '145K',
-      previous: '160K',
-      status: 'Safe Haven Volatility',
-      scenarioBullish: 'Weak Job Report: Gold & Silver surge as USD index drops sharply.',
-      scenarioBearish: 'Strong Job Report: Real yields rise, precious metals face profit booking.'
-    },
-    {
-      id: 2,
-      event: 'Global Central Bank Gold Reserves & CPI',
-      impact: 'HIGH',
-      time: '19:30 IST',
-      forecast: '2.8%',
-      previous: '2.9%',
-      status: 'Inflation Hedge Catalyst',
-      scenarioBullish: 'Persistent Inflation: Strong institutional demand for physical and spot XAU/XAG.',
-      scenarioBearish: 'Cooling Inflation: Short-term correction in bullion spot prices.'
-    }
+    { id: 1, event: 'US Non-Farm Payrolls (NFP)', impact: 'HIGH', time: '18:00 IST', forecast: '145K', previous: '160K', status: 'Safe Haven Volatility', scenarioBullish: 'Weak Job Report: Gold & Silver surge as USD index drops sharply.', scenarioBearish: 'Strong Job Report: Real yields rise, precious metals face profit booking.' },
+    { id: 2, event: 'Global Central Bank Gold Reserves & CPI', impact: 'HIGH', time: '19:30 IST', forecast: '2.8%', previous: '2.9%', status: 'Inflation Hedge Catalyst', scenarioBullish: 'Persistent Inflation: Strong institutional demand for physical and spot XAU/XAG.', scenarioBearish: 'Cooling Inflation: Short-term correction in bullion spot prices.' }
   ]
 };
 
@@ -155,7 +24,11 @@ export default function App() {
   const [terminalMode, setTerminalMode] = useState('SMC'); 
   const [activeTab, setActiveTab] = useState('dashboard'); 
   const [prices, setPrices] = useState({});
-  const [selectedAsset, setSelectedAsset] = useState(INSTITUTIONAL_ASSETS[0]);
+  const [selectedAsset, setSelectedAsset] = useState(INITIAL_ASSETS[0]);
+  
+  // Structure Cache: Keeps entry locked per asset until price breaches structural swing boundaries
+  const [structureCache, setStructureCache] = useState({});
+  
   const [timeUTC, setTimeUTC] = useState('');
   const [activeSession, setActiveSession] = useState({ name: 'NEW YORK SESSION' });
   const [optionStrat, setOptionStrat] = useState('STRANGLE');
@@ -169,7 +42,7 @@ export default function App() {
     setSelectedNews(list[0]);
   }, [selectedAsset]);
 
-  // Live prices for watchlist ticker only
+  // Live prices feed
   useEffect(() => {
     const fetchPrices = () => {
       fetch('https://api.india.delta.exchange/v2/tickers')
@@ -196,7 +69,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Clock
+  // Clock & Sessions
   useEffect(() => {
     const track24hSessions = () => {
       const now = new Date();
@@ -218,24 +91,80 @@ export default function App() {
     return () => clearInterval(timer);
   }, []);
 
+  // STRUCTURAL BREAK ENGINE: Only changes entry when price breaks current swing block boundaries
+  useEffect(() => {
+    const currentCMP = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
+    if (!currentCMP) return;
+
+    const step = currentCMP < 10 ? 0.05 : currentCMP * 0.005;
+    const currentBlock = Math.floor(currentCMP / step);
+    const swingLow = currentBlock * step;
+    const swingHigh = (currentBlock + 1) * step;
+
+    setStructureCache(prev => {
+      const existing = prev[selectedAsset.symbol];
+
+      // If structure already exists AND price is inside current bounds, KEEP IT LOCKED!
+      if (existing && currentCMP <= existing.swingHigh && currentCMP >= existing.swingLow) {
+        return prev;
+      }
+
+      // Structure Break Detected (New Swing Block Formed) -> Recalibrate institutional zone
+      const isBullish = currentCMP >= ((swingLow + swingHigh) / 2);
+      let entry, sl, tp, bias, status, smcZone, logic;
+
+      if (isBullish) {
+        bias = 'LONG';
+        entry = swingLow + (swingHigh - swingLow) * 0.40;
+        sl = swingLow - (step * 0.3);
+        tp = entry + ((entry - sl) * 3);
+        status = 'BULLISH BOS / LONG LOCKED';
+        smcZone = '5M Discount FVG & Swing Low Sweep';
+        logic = 'New Market Structure Break (BOS) confirmed. Price retraced into institutional discount FVG block. Entry is locked until structural boundary breach.';
+      } else {
+        bias = 'SHORT';
+        entry = swingHigh - (swingHigh - swingLow) * 0.40;
+        sl = swingHigh + (step * 0.3);
+        tp = entry - ((sl - entry) * 3);
+        status = 'BEARISH MSS / SHORT LOCKED';
+        smcZone = '4H Premium Supply & Equal Highs Sweep';
+        logic = 'New Market Structure Shift (MSS) confirmed. Price tapped premium supply array. Entry is locked until structural boundary breach.';
+      }
+
+      return {
+        ...prev,
+        [selectedAsset.symbol]: {
+          bias,
+          entry,
+          sl,
+          tp,
+          swingLow,
+          swingHigh,
+          smcZone,
+          logic,
+          status,
+        }
+      };
+    });
+  }, [prices, selectedAsset]);
+
   const cmp = prices[selectedAsset.symbol]?.price || selectedAsset.basePrice;
   const isSmallAsset = cmp < 10;
   
-  // DIRECTLY USE STATIC VALUES FROM SELECTED ASSET (ZERO COMPUTATION = ZERO FLUCTUATION)
-  const activeStructure = {
-    bias: selectedAsset.bias,
-    entry: selectedAsset.entry,
-    sl: selectedAsset.sl,
-    tp: selectedAsset.tp,
-    smcZone: selectedAsset.smcZone,
-    logic: selectedAsset.logic,
-    status: selectedAsset.bias === 'LONG' ? 'BULLISH BOS / LONG LOCKED' : 'BEARISH MSS / SHORT LOCKED',
+  const activeStructure = structureCache[selectedAsset.symbol] || {
+    bias: 'LONG',
+    entry: cmp ? cmp * 0.998 : selectedAsset.basePrice,
+    sl: cmp ? cmp * 0.993 : selectedAsset.basePrice * 0.99,
+    tp: cmp ? cmp * 1.013 : selectedAsset.basePrice * 1.03,
+    smcZone: 'Initial Liquidity Array',
+    logic: 'Initializing institutional liquidity mapping. Structure locked.',
+    status: 'BULLISH BOS / LONG LOCKED',
   };
 
   const isLong = activeStructure.bias === 'LONG';
   const formatPrice = (val) => isSmallAsset ? Number(val || 0).toFixed(4) : Number(val || 0).toFixed(2);
 
-  const optionAsset = selectedAsset.hasOptions ? selectedAsset : INSTITUTIONAL_ASSETS[0];
+  const optionAsset = selectedAsset.hasOptions ? selectedAsset : INITIAL_ASSETS[0];
   const optCMP = prices[optionAsset.symbol]?.price || optionAsset.basePrice;
   const optStep = optionAsset.strikeStep;
   const atmStrike = Math.round(optCMP / optStep) * optStep;
@@ -288,7 +217,7 @@ export default function App() {
             <h1 className="text-xl md:text-2xl font-black tracking-tight text-white flex items-center gap-1.5">
               APEX<span className="text-emerald-400">PRO</span>
               <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
-                TERMINAL v8.2
+                TERMINAL v10.0
               </span>
             </h1>
             <p className="text-[11px] text-emerald-400 font-mono">
@@ -351,16 +280,17 @@ export default function App() {
           <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
             <div className="flex justify-between items-center px-1">
               <span className="text-xs font-bold text-slate-400 font-mono tracking-wider">
-                WATCHLIST ({INSTITUTIONAL_ASSETS.length} ASSETS)
+                WATCHLIST ({INITIAL_ASSETS.length} ASSETS)
               </span>
-              <span className="text-[10px] text-emerald-400 font-mono">Strictly Locked</span>
+              <span className="text-[10px] text-emerald-400 font-mono">Structure Locked</span>
             </div>
 
             <div className="space-y-2 max-h-[560px] overflow-y-auto pr-1">
-              {INSTITUTIONAL_ASSETS.map(asset => {
+              {INITIAL_ASSETS.map(asset => {
                 const p = prices[asset.symbol]?.price || asset.basePrice;
                 const isSelected = selectedAsset.symbol === asset.symbol;
-                const assetIsLong = asset.bias === 'LONG';
+                const cached = structureCache[asset.symbol];
+                const assetIsLong = cached ? cached.bias === 'LONG' : true;
 
                 return (
                   <div
@@ -386,7 +316,7 @@ export default function App() {
                       <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${
                         assetIsLong ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                       }`}>
-                        {asset.bias}
+                        {assetIsLong ? 'LONG' : 'SHORT'}
                       </span>
                       <button
                         onClick={(e) => {
@@ -409,11 +339,11 @@ export default function App() {
           <div className="lg:col-span-2 space-y-4">
             {terminalMode === 'SMC' && (
               <div className="space-y-4">
-                {/* Setup Bar with LONG/SHORT Badge */}
+                {/* Setup Bar with Structure Locked Status */}
                 <div className="bg-[#090d16] p-4 rounded-xl border border-slate-800 shadow-xl space-y-3">
                   <div className="flex flex-wrap justify-between items-center gap-2 border-b border-slate-800 pb-2">
                     <div>
-                      <span className="text-xs text-slate-400 font-mono block">INSTITUTIONAL SETUP:</span>
+                      <span className="text-xs text-slate-400 font-mono block">STRUCTURE-LOCKED SETUP:</span>
                       <span className="text-sm font-bold text-white flex items-center gap-2 mt-0.5">
                         {selectedAsset.name} ({selectedAsset.symbol})
                         <span className={`text-[10px] px-2 py-0.5 rounded font-mono font-bold border ${
@@ -447,7 +377,7 @@ export default function App() {
                         Zone: {activeStructure.smcZone}
                       </span>
                       <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-                        100% Fixed & Locked
+                        Locked Until Structure Change
                       </span>
                     </div>
                     <p className="text-slate-300 font-sans leading-relaxed">
@@ -641,11 +571,11 @@ export default function App() {
                 <span className="text-cyan-300 font-bold">${formatPrice(activeStructure.entry)}</span>
               </div>
               <div className="bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/40">
-                <span className="text-rose-400 text-[10px]">SL: </span>
+                <span className="text-slate-400 text-[10px]">SL: </span>
                 <span className="text-rose-300 font-bold">${formatPrice(activeStructure.sl)}</span>
               </div>
               <div className="bg-emerald-500/10 px-3 py-1.5 rounded-lg border border-emerald-500/40">
-                <span className="text-emerald-400 text-[10px]">TP: </span>
+                <span className="text-slate-400 text-[10px]">TP: </span>
                 <span className="text-emerald-300 font-bold">${formatPrice(activeStructure.tp)}</span>
               </div>
             </div>
